@@ -1,0 +1,161 @@
+/* Ultra-Modern Voice Recorder App Styling */
+
+#root {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0a0e27 0%, #141b2d 50%, #1a0a27 100%);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.app-container {
+  background: rgba(20, 27, 45, 0.8);
+  backdrop-filter: blur(20px);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 40px rgba(102, 126, 234, 0.2);
+  text-align: center;
+  width: 90%;
+  max-width: 550px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-title {
+  background: linear-gradient(135deg, #f093fb, #4facfe);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+  font-size: 2.2em;
+  font-weight: 800;
+}
+
+.recorder-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+}
+
+.action-button {
+  padding: 16px 40px;
+  font-size: 1.1em;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+.action-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.action-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.action-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+.action-button:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.action-button.record-button {
+  background: linear-gradient(135deg, #fa709a, #fee140);
+  box-shadow: 0 6px 20px rgba(250, 112, 154, 0.4);
+}
+
+.action-button.record-button:hover {
+  box-shadow: 0 12px 32px rgba(250, 112, 154, 0.6);
+}
+
+.action-button.stop-button {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+}
+
+.action-button.stop-button:hover {
+  box-shadow: 0 12px 32px rgba(79, 172, 254, 0.6);
+}
+
+.audio-player {
+  margin-top: 25px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(10, 14, 39, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.audio-player audio {
+  width: 100%;
+  border-radius: 8px;
+  outline: none;
+}
+
+.download-button {
+  display: inline-block;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 20px rgba(67, 233, 123, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.download-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(67, 233, 123, 0.6);
+  background: linear-gradient(135deg, #38f9d7, #43e97b);
+}
+
+/* Debug Console Styling */
+div[style*="monospace"] {
+  background: rgba(10, 14, 39, 0.8) !important;
+  border: 1px solid rgba(102, 126, 234, 0.3) !important;
+  border-radius: 8px;
+}
