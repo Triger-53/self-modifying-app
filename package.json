@@ -19,7 +19,7 @@
     "appId": "com.example.selfmodifyingapp",
     "mac": {
       "category": "public.app-category.developer-tools",
-      "target": "zip",
+      "target": "dmg",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",

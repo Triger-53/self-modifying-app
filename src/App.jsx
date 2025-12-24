@@ -400,11 +400,25 @@ The application will launch in a new window.
     localStorage.setItem('vfs_files', JSON.stringify(files));
   }, [files]);
 
-  // Bundle on change (debounced in a real app, immediate here for simplicity)
+  // Debounce files update to prevent excessive bundling
+  const [debouncedFiles, setDebouncedFiles] = useState(files);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedFiles(files);
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [files]);
+
+  // Bundle on change (now debounced)
   useEffect(() => {
     const runBundle = async () => {
+      if (!debouncedFiles) return;
       try {
-        const { code, dependencies } = await bundle(files);
+        const { code, dependencies } = await bundle(debouncedFiles);
 
         // Load external dependencies
         const loadedModules = {};
@@ -429,7 +443,7 @@ The application will launch in a new window.
       }
     };
     runBundle();
-  }, [files]);
+  }, [debouncedFiles]);
 
   const handleFileChange = (newContent) => {
     setFiles(prev => ({ ...prev, [activeFile]: newContent }));
@@ -464,7 +478,7 @@ The application will launch in a new window.
       if (!apiKey) throw new Error('API Key missing');
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const fullPrompt = `You are an expert React developer acting as an autonomous agent.
       
