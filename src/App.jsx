@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import * as Babel from '@babel/standalone';
 import * as ReactModule from 'react';
 import * as ReactDOMModule from 'react-dom';
@@ -576,6 +576,110 @@ The application will launch in a new window.
     }
   }, [bundledCode]);
 
+  // Mobile specific state
+  const [mobileTab, setMobileTab] = useState('code'); // 'files', 'code', 'preview'
+
+  const renderMobileContent = () => {
+    if (mobileTab === 'files') {
+      return (
+        <FileExplorer
+          files={files}
+          selectedFile={activeFile}
+          onFileSelect={(file) => {
+            setActiveFile(file);
+            setMobileTab('code'); // Auto-switch to code on selection
+          }}
+          onFileCreate={handleFileCreate}
+          onFileDelete={handleFileDelete}
+        />
+      );
+    }
+    if (mobileTab === 'code') {
+      return (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {/* AI Input Section */}
+          <div style={{
+            padding: '16px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(20, 27, 45, 0.6)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="✨ Ask AI to transform your code..."
+              style={{
+                width: '100%',
+                height: '70px',
+                padding: '12px',
+                boxSizing: 'border-box',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '0.9rem',
+                background: 'rgba(10, 14, 39, 0.6)',
+                border: '1px solid rgba(102, 126, 234, 0.3)',
+                borderRadius: '8px',
+                color: 'white',
+                resize: 'none',
+                transition: 'all 0.25s'
+              }}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px', gap: '12px' }}>
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                style={{
+                  padding: '10px 20px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  background: loading
+                    ? 'rgba(102, 126, 234, 0.5)'
+                    : 'linear-gradient(135deg, #667eea, #764ba2)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  transition: 'all 0.25s',
+                  boxShadow: loading ? 'none' : '0 4px 12px rgba(102, 126, 234, 0.4)',
+                  opacity: loading ? 0.7 : 1,
+                  flex: 1
+                }}
+              >
+                {loading ? '⚡ Generating...' : '🚀 Generate'}
+              </button>
+            </div>
+          </div>
+
+          <textarea
+            value={files[activeFile] || ''}
+            onChange={(e) => handleFileChange(e.target.value)}
+            style={{
+              flex: 1,
+              width: '100%',
+              fontFamily: '"Fira Code", "Consolas", monospace',
+              fontSize: '0.9rem',
+              lineHeight: '1.6',
+              padding: '16px',
+              paddingBottom: '80px', // Space for bottom nav
+              background: '#0d1117',
+              color: '#e6edf3',
+              resize: 'none',
+              border: 'none',
+              outline: 'none',
+              caretColor: '#667eea'
+            }}
+          />
+        </div>
+      );
+    }
+    if (mobileTab === 'preview') {
+      return (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: 'white' }}>
+          <RuntimeApp />
+        </div>
+      );
+    }
+  };
+
   return (
     <div style={{
       display: 'flex',
@@ -587,8 +691,8 @@ The application will launch in a new window.
       background: 'linear-gradient(135deg, #0a0e27 0%, #141b2d 50%, #1a0a27 100%)'
     }}>
 
-      {/* Toolbar */}
-      <div style={{
+      {/* Desktop Toolbar (Hidden on Mobile) */}
+      <div className="hide-on-mobile" style={{
         padding: '16px 24px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         display: 'flex',
@@ -675,162 +779,227 @@ The application will launch in a new window.
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      {/* Mobile Header */}
+      <div className="show-on-mobile" style={{
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        background: 'rgba(20, 27, 45, 0.9)',
+        backdropFilter: 'blur(20px)'
+      }}>
+        <h2 style={{
+          margin: 0,
+          fontSize: '1.2rem',
+          fontWeight: 800,
+          background: 'linear-gradient(135deg, #667eea, #764ba2)',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}>Ultra IDE</h2>
+        <button
+          onClick={handleReset}
+          style={{
+            padding: '6px 12px',
+            background: 'rgba(231, 76, 60, 0.2)',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#ff6b6b',
+            fontSize: '0.8rem'
+          }}
+        >🔄</button>
+      </div>
 
-        {/* Editor Area */}
-        {(viewMode === 'split' || viewMode === 'editor') && (
-          <div style={{ flex: 1, display: 'flex', borderRight: viewMode === 'split' ? '1px solid #ccc' : 'none' }}>
+      {/* Main Content Area */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
 
-            {/* File Explorer */}
-            <FileExplorer
-              files={files}
-              selectedFile={activeFile}
-              onFileSelect={setActiveFile}
-              onFileCreate={handleFileCreate}
-              onFileDelete={handleFileDelete}
-            />
+        {/* Desktop View */}
+        <div className="hide-on-mobile" style={{ width: '100%', height: '100%', display: 'flex' }}>
+          {/* Editor Area */}
+          {(viewMode === 'split' || viewMode === 'editor') && (
+            <div style={{ flex: 1, display: 'flex', borderRight: viewMode === 'split' ? '1px solid #ccc' : 'none' }}>
 
-            {/* Code Editor */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              {/* AI Input Section */}
-              <div style={{
-                padding: '16px',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                background: 'rgba(20, 27, 45, 0.6)',
-                backdropFilter: 'blur(10px)'
-              }}>
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="✨ Ask AI to transform your code..."
-                  style={{
-                    width: '100%',
-                    height: '70px',
-                    padding: '12px',
-                    boxSizing: 'border-box',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '0.9rem',
-                    background: 'rgba(10, 14, 39, 0.6)',
-                    border: '1px solid rgba(102, 126, 234, 0.3)',
-                    borderRadius: '8px',
-                    color: 'white',
-                    resize: 'none',
-                    transition: 'all 0.25s'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#667eea';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.2), 0 0 20px rgba(102, 126, 234, 0.3)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(102, 126, 234, 0.3)';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                />
-                <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px', gap: '12px' }}>
-                  <button
-                    onClick={handleGenerate}
-                    disabled={loading}
-                    style={{
-                      padding: '10px 20px',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      background: loading
-                        ? 'rgba(102, 126, 234, 0.5)'
-                        : 'linear-gradient(135deg, #667eea, #764ba2)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      color: 'white',
-                      fontWeight: 600,
-                      fontSize: '0.9rem',
-                      transition: 'all 0.25s',
-                      boxShadow: loading ? 'none' : '0 4px 12px rgba(102, 126, 234, 0.4)',
-                      opacity: loading ? 0.7 : 1
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!loading) {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!loading) {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
-                      }
-                    }}
-                  >
-                    {loading ? '⚡ Generating...' : '🚀 Generate'}
-                  </button>
-                  {status && (
-                    <span style={{
-                      fontSize: '0.85rem',
-                      color: status.includes('Error') ? '#ff6b6b' : '#4facfe',
-                      fontWeight: 500
-                    }}>
-                      {status}
-                    </span>
-                  )}
-                </div>
-              </div>
+              {/* File Explorer */}
+              <FileExplorer
+                files={files}
+                selectedFile={activeFile}
+                onFileSelect={setActiveFile}
+                onFileCreate={handleFileCreate}
+                onFileDelete={handleFileDelete}
+              />
 
               {/* Code Editor */}
-              <textarea
-                value={files[activeFile] || ''}
-                onChange={(e) => handleFileChange(e.target.value)}
-                style={{
-                  flex: 1,
-                  width: '100%',
-                  fontFamily: '"Fira Code", "Consolas", monospace',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.6',
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                {/* AI Input Section */}
+                <div style={{
                   padding: '16px',
-                  background: '#0d1117',
-                  color: '#e6edf3',
-                  resize: 'none',
-                  border: 'none',
-                  outline: 'none',
-                  caretColor: '#667eea'
-                }}
-              />
-            </div>
-          </div>
-        )}
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(20, 27, 45, 0.6)',
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="✨ Ask AI to transform your code..."
+                    style={{
+                      width: '100%',
+                      height: '70px',
+                      padding: '12px',
+                      boxSizing: 'border-box',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '0.9rem',
+                      background: 'rgba(10, 14, 39, 0.6)',
+                      border: '1px solid rgba(102, 126, 234, 0.3)',
+                      borderRadius: '8px',
+                      color: 'white',
+                      resize: 'none',
+                      transition: 'all 0.25s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#667eea';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.2), 0 0 20px rgba(102, 126, 234, 0.3)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(102, 126, 234, 0.3)';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px', gap: '12px' }}>
+                    <button
+                      onClick={handleGenerate}
+                      disabled={loading}
+                      style={{
+                        padding: '10px 20px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        background: loading
+                          ? 'rgba(102, 126, 234, 0.5)'
+                          : 'linear-gradient(135deg, #667eea, #764ba2)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: 'white',
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        transition: 'all 0.25s',
+                        boxShadow: loading ? 'none' : '0 4px 12px rgba(102, 126, 234, 0.4)',
+                        opacity: loading ? 0.7 : 1
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!loading) {
+                          e.target.style.transform = 'translateY(-2px)';
+                          e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!loading) {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                        }
+                      }}
+                    >
+                      {loading ? '⚡ Generating...' : '🚀 Generate'}
+                    </button>
+                    {status && (
+                      <span style={{
+                        fontSize: '0.85rem',
+                        color: status.includes('Error') ? '#ff6b6b' : '#4facfe',
+                        fontWeight: 500
+                      }}>
+                        {status}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-        {/* Preview Panel */}
-        {(viewMode === 'split' || viewMode === 'preview') && (
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'linear-gradient(135deg, #0a0e27 0%, #141b2d 100%)',
-            borderLeft: viewMode === 'split' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
-          }}>
-            {viewMode === 'split' && (
-              <div style={{
-                padding: '16px',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                background: 'rgba(20, 27, 45, 0.6)',
-                backdropFilter: 'blur(10px)',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                color: '#b8c5d6',
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase'
-              }}>▶️ Live Preview</div>
-            )}
+                {/* Code Editor */}
+                <textarea
+                  value={files[activeFile] || ''}
+                  onChange={(e) => handleFileChange(e.target.value)}
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    fontFamily: '"Fira Code", "Consolas", monospace',
+                    fontSize: '0.9rem',
+                    lineHeight: '1.6',
+                    padding: '16px',
+                    background: '#0d1117',
+                    color: '#e6edf3',
+                    resize: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    caretColor: '#667eea'
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Preview Panel */}
+          {(viewMode === 'split' || viewMode === 'preview') && (
             <div style={{
               flex: 1,
-              overflow: 'auto',
-              padding: viewMode === 'split' ? '20px' : '0',
               display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
+              flexDirection: 'column',
+              background: 'linear-gradient(135deg, #0a0e27 0%, #141b2d 100%)',
+              borderLeft: viewMode === 'split' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
             }}>
-              <RuntimeApp />
+              {viewMode === 'split' && (
+                <div style={{
+                  padding: '16px',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(20, 27, 45, 0.6)',
+                  backdropFilter: 'blur(10px)',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  color: '#b8c5d6',
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase'
+                }}>▶️ Live Preview</div>
+              )}
+              <div style={{
+                flex: 1,
+                overflow: 'auto',
+                padding: viewMode === 'split' ? '20px' : '0',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                <RuntimeApp />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
+        {/* Mobile View Content */}
+        <div className="show-on-mobile" style={{ width: '100%', height: '100%' }}>
+          {renderMobileContent()}
+        </div>
+
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="mobile-nav-bar">
+        <button
+          className={`mobile-nav-item ${mobileTab === 'files' ? 'active' : ''}`}
+          onClick={() => setMobileTab('files')}
+        >
+          <span style={{ fontSize: '1.5rem' }}>📂</span>
+          <span>Files</span>
+        </button>
+        <button
+          className={`mobile-nav-item ${mobileTab === 'code' ? 'active' : ''}`}
+          onClick={() => setMobileTab('code')}
+        >
+          <span style={{ fontSize: '1.5rem' }}>📝</span>
+          <span>Code</span>
+        </button>
+        <button
+          className={`mobile-nav-item ${mobileTab === 'preview' ? 'active' : ''}`}
+          onClick={() => setMobileTab('preview')}
+        >
+          <span style={{ fontSize: '1.5rem' }}>▶️</span>
+          <span>Run</span>
+        </button>
       </div>
     </div>
   );
