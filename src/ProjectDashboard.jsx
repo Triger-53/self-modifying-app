@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreateProject, onDeleteProject, onCloneProject, onRenameProject, onUpdateLogo }) => {
+const ProjectDashboard = (props) => {
+    const { projects, currentProjectId, onSelectProject, onCreateProject, onDeleteProject, onCloneProject, onRenameProject, onUpdateLogo, onClearData } = props;
     const [isCreating, setIsCreating] = useState(false);
     const [newProjectName, setNewProjectName] = useState('');
     const [editingProjectId, setEditingProjectId] = useState(null);
@@ -461,7 +462,38 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                     font-size: 0.9rem; transition: all 0.2s;
                 }
                 .btn-files:hover { background: rgba(102, 126, 234, 0.2); color: white; transform: scale(1.1); }
+
+                .dashboard-footer {
+                    margin-top: 40px;
+                    padding-top: 20px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
+                    width: 100%;
+                    max-width: 1000px;
+                    display: flex;
+                    justify-content: center;
+                }
+                .btn-clear-data {
+                    background: transparent;
+                    color: #b8c5d6;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .btn-clear-data:hover {
+                    background: rgba(231, 76, 60, 0.1);
+                    color: #e74c3c;
+                    border-color: rgba(231, 76, 60, 0.3);
+                }
             `}</style>
+
+            <footer className="dashboard-footer">
+                <button onClick={props.onClearData} className="btn-clear-data">
+                    🗑️ Clear All Data & Reset
+                </button>
+            </footer>
         </div>
     );
 };

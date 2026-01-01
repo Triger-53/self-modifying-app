@@ -1260,6 +1260,23 @@ export default App;`,
     setProjects(prev => prev.map(p => p.id === id ? { ...p, logo: newLogo } : p));
   };
 
+  const handleClearData = () => {
+    if (confirm('⚠️ DANGER ZONE ⚠️\n\nAre you sure you want to clear ALL your data?\nThis will remove all your projects and reset the app to its factory state.\n\nThis action cannot be undone.')) {
+      localStorage.clear();
+      // Initialize with default state
+      const initialProject = {
+        id: 'default',
+        name: 'My First App',
+        logo: '🚀',
+        files: { ...tiimoFiles }, // Reset to Tiimo demo on factory reset
+        lastModified: Date.now()
+      };
+      setProjects([initialProject]);
+      setCurrentProjectId(initialProject.id);
+      setView('dashboard');
+    }
+  };
+
   // Runtime Component to execute the bundled code
   const RuntimeApp = useCallback(() => {
     if (!bundledCode || !bundledCode.code) return null;
@@ -1415,6 +1432,7 @@ export default App;`,
           onCloneProject={handleCloneProject}
           onRenameProject={handleRenameProject}
           onUpdateLogo={handleUpdateLogo}
+          onClearData={handleClearData}
         />
       ) : (
         <>
