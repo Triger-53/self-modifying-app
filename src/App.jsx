@@ -877,6 +877,8 @@ A visual task planner and focus timer inspired by Tiimo.
   const [referenceApp, setReferenceApp] = useState({ url: '', description: '' });
   const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
   const [thinkingLevel, setThinkingLevel] = useState('medium');
+  const [thinkingProcess, setThinkingProcess] = useState('');
+  const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
 
   // Save to localStorage
   useEffect(() => {
@@ -938,6 +940,9 @@ A visual task planner and focus timer inspired by Tiimo.
   const handleGenerate = async () => {
     if (!prompt) return;
     setLoading(true);
+    setThinkingProcess(''); // Clear previous thought
+    setIsThinkingExpanded(false);
+
     const statusMessages = {
       minimal: 'AI is using minimal thought...',
       low: 'AI is thinking briefly...',
@@ -957,7 +962,20 @@ A visual task planner and focus timer inspired by Tiimo.
         model: "gemini-3-flash-preview",
         systemInstruction: `You are an expert React developer. 
         You modify a Virtual File System (VFS) based on user requests.
-        ALWAYS return a valid JSON object.
+        
+        CRITICAL INSTRUCTION:
+        First, output your thinking process wrapped in <Thinking> tags. Explain your plan, design choices, and how you will fit the app to the screen.
+        Then, output the JSON object.
+        
+        Example Output:
+        <Thinking>
+        I will add a button...
+        </Thinking>
+        {
+          "files": ...
+        }
+
+        ALWAYS return a valid JSON object after the thinking tags.
         ONLY include files that were modified or created.
         
         DESIGN PHILOSOPHY:
@@ -1005,7 +1023,16 @@ A visual task planner and focus timer inspired by Tiimo.
       const response = result.response;
       let text = response.text();
 
+      // Extract thinking process
+      const thinkingMatch = text.match(/<Thinking>([\s\S]*?)<\/Thinking>/i);
+      if (thinkingMatch) {
+        setThinkingProcess(thinkingMatch[1].trim());
+        text = text.replace(/<Thinking>[\s\S]*?<\/Thinking>/i, '').trim();
+      }
+
       try {
+        // Clean up markdown code blocks if present
+        text = text.replace(/```json/g, '').replace(/```/g, '');
         const changes = JSON.parse(text);
 
         setFiles(prev => {
@@ -1515,6 +1542,53 @@ A visual task planner and focus timer inspired by Tiimo.
                       color: '#4facfe'
                     }}>
                       {status}
+                    </div>
+                  )}
+
+                  {thinkingProcess && (
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(102, 126, 234, 0.2)',
+                      overflow: 'hidden'
+                    }}>
+                      <button
+                        onClick={() => setIsThinkingExpanded(!isThinkingExpanded)}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          background: 'none',
+                          border: 'none',
+                          color: '#b8c5d6',
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          🧠 AI Thinking
+                        </span>
+                        <span>{isThinkingExpanded ? '▼' : '▶'}</span>
+                      </button>
+
+                      {isThinkingExpanded && (
+                        <div style={{
+                          padding: '15px',
+                          borderTop: '1px solid rgba(102, 126, 234, 0.1)',
+                          color: '#b8c5d6',
+                          fontSize: '0.9rem',
+                          lineHeight: '1.5',
+                          whiteSpace: 'pre-wrap',
+                          maxHeight: '300px',
+                          overflowY: 'auto',
+                          background: 'rgba(0,0,0,0.2)'
+                        }}>
+                          {thinkingProcess}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
