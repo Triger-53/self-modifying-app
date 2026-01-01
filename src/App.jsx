@@ -14,366 +14,733 @@ window.ReactDOM = ReactDOMModule;
 const App = () => {
   // Initial default files
   const defaultFiles = {
-    'src/App.css': `body {
+    'src/App.css': `/* General styles for the Tiimo-like app */
+body {
   font-family: 'Arial', sans-serif;
-  background-color: #2c3e50;
+  background-color: #f0f2f5; /* Light grey background */
   margin: 0;
   padding: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* Align to top, not center */
   min-height: 100vh;
-  color: #ecf0f1;
-  overflow: hidden;
+  color: #333;
+  overflow-y: auto;
 }
 
 .app-container {
-  background-color: #34495e;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  background-color: #ffffff; /* White card background */
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
-  width: 90%;
-  max-width: 500px;
-  border: 2px solid #7f8c8d;
-}
-
-.header-title {
-  color: #e74c3c;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  border-bottom: 2px solid #7f8c8d;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
-  font-size: 2.5em;
-}
-
-.recorder-container {
+  width: 95%;
+  max-width: 600px;
+  margin: 20px 0;
+  min-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 20px;
 }
 
-.action-button {
-  padding: 15px 30px;
-  font-size: 1.2em;
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+}
+
+.header-title {
+  color: #6a6a6a;
+  font-size: 1.8em;
+  font-weight: bold;
+  margin: 0;
+  text-align: left;
+}
+
+.add-task-button {
+  background-color: #6c7cdd; /* Tiimo blue */
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 1em;
+  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  text-transform: uppercase;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.action-button:hover {
-  transform: translateY(-2px);
-}
-
-.action-button:active {
-  transform: translateY(0);
-}
-
-.action-button.record-button {
-  background-color: #e74c3c; /* Red for record */
-}
-.action-button.record-button:hover {
-  background-color: #c0392b;
-}
-
-.action-button.stop-button {
-  background-color: #3498db; /* Blue for stop */
-}
-.action-button.stop-button:hover {
-  background-color: #2980b9;
-}
-
-.audio-player {
-  margin-top: 20px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-.audio-player audio {
-  width: 100%;
-}
-
-.download-button {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #2ecc71;
-  color: white;
-  text-decoration: none;
-  border-radius: 5px;
-  font-weight: bold;
   transition: background-color 0.3s ease;
 }
 
-.download-button:hover {
-  background-color: #27ae60;
+.add-task-button:hover {
+  background-color: #5a6cd3;
+}
+
+.timeline-section {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.timeline-section h2 {
+  font-size: 1.4em;
+  color: #555;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  background-color: #fdfdfd;
+  padding: 12px 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 5px solid;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.task-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.task-item.active {
+  background-color: #e0e7ff; /* Light blue for active task */
+  border-left: 5px solid #6c7cdd;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  font-weight: bold;
+}
+
+.task-item-icon {
+  font-size: 1.5em;
+  margin-right: 10px;
+}
+
+.task-item-time {
+  font-weight: 600;
+  min-width: 60px;
+  margin-right: 10px;
+  color: #777;
+}
+
+.task-item.anytime .task-item-time {
+  font-style: italic;
+  color: #999;
+}
+
+.task-item-title {
+  flex-grow: 1;
+  text-align: left;
+  font-size: 1.1em;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 450px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content h2 {
+  color: #333;
+  font-size: 1.6em;
+  margin-top: 0;
+  margin-bottom: 25px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+  font-size: 0.95em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="time"],
+.form-group input[type="number"] {
+  width: calc(100% - 20px);
+  padding: 12px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1em;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="time"]:focus,
+.form-group input[type="number"]:focus {
+  outline: none;
+  border-color: #6c7cdd;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+  accent-color: #6c7cdd;
+}
+
+.checkbox-group label {
+  font-weight: normal;
+  color: #555;
+  margin-bottom: 0;
+}
+
+.color-picker-grid, .icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.color-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, transform 0.1s ease;
+}
+
+.color-swatch.selected {
+  border-color: #6c7cdd;
+  transform: scale(1.05);
+}
+
+.icon-option {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.8em;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background-color: #f5f5f5;
+  transition: border-color 0.2s ease, transform 0.1s ease, background-color 0.2s ease;
+}
+
+.icon-option:hover {
+  background-color: #e0e7ff;
+}
+
+.icon-option.selected {
+  border-color: #6c7cdd;
+  transform: scale(1.05);
+  background-color: #e0e7ff;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.modal-button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.modal-button.cancel {
+  background-color: #e0e0e0;
+  color: #555;
+}
+
+.modal-button.cancel:hover {
+  background-color: #d0d0d0;
+}
+
+.modal-button.save {
+  background-color: #6c7cdd;
+  color: white;
+}
+
+.modal-button.save:hover {
+  background-color: #5a6cd3;
+}
+
+.focus-timer-container {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-top: 20px;
+}
+
+.focus-timer-container h2 {
+  color: #6c7cdd;
+  font-size: 2em;
+  margin-bottom: 20px;
+}
+
+.focus-timer-ring {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 30px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: conic-gradient(
+    #6c7cdd var(--progress, 0%),
+    #e0e7ff var(--progress, 0%)
+  );
+  box-shadow: inset 0 0 0 10px white, 0 0 0 10px #e0e7ff; /* Inner and outer ring effect */
+}
+
+.focus-timer-time {
+  font-size: 3em;
+  font-weight: bold;
+  color: #333;
+  position: relative;
+  z-index: 1;
+}
+
+.focus-timer-task-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.focus-timer-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.focus-timer-button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.focus-timer-button.pause {
+  background-color: #f7b731; /* Yellowish for pause */
+  color: white;
+}
+
+.focus-timer-button.pause:hover {
+  background-color: #e6a827;
+}
+
+.focus-timer-button.end {
+  background-color: #e74c3c; /* Red for end */
+  color: white;
+}
+
+.focus-timer-button.end:hover {
+  background-color: #c0392b;
 }`,
-    'src/App.jsx': `import React, { useState, useRef } from 'react';
-import Header from './Header';
+    'src/App.jsx': `import React, { useState, useEffect, useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import './App.css';
 
-const App = () => {
-  const [permission, setPermission] = useState(false);
-  const [stream, setStream] = useState(null);
-  const mediaRecorder = useRef(null);
-  const [recordingStatus, setRecordingStatus] = useState('inactive');
-  const audioChunks = useRef([]);
-  const [audio, setAudio] = useState(null);
-  const [debugInfo, setDebugInfo] = useState([]);
-  const [error, setError] = useState(null);
+// Components
+const Header = ({ title, onAddTaskClick }) => (
+  <div className="header-container">
+    <h1 className="header-title">{title}</h1>
+    <button className="add-task-button" onClick={onAddTaskClick}>+ Add Task</button>
+  </div>
+);
 
-  const addDebug = (message) => {
-    console.log('[DEBUG]', message);
-    setDebugInfo(prev => [...prev, \`[\${new Date().toLocaleTimeString()}] \${message}\`]);
+const TaskItem = ({ task, onStartTask, isActive, taskColor }) => {
+  const itemStyle = { borderColor: taskColor };
+
+  return (
+    <div 
+      className={\`task-item \${isActive ? 'active' : ''} \${task.isAnytime ? 'anytime' : ''}\`}
+      style={itemStyle}
+      onClick={() => onStartTask(task)}
+    >
+      <span className="task-item-icon">{task.icon}</span>
+      <span className="task-item-time">
+        {task.isAnytime ? 'Anytime' : task.startTime}
+      </span>
+      <span className="task-item-title">{task.title}</span>
+    </div>
+  );
+};
+
+const AddTaskModal = ({ isOpen, onClose, onSaveTask }) => {
+  const [title, setTitle] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [duration, setDuration] = useState(30); // Default 30 minutes
+  const [isAnytime, setIsAnytime] = useState(false);
+  const [selectedColor, setSelectedColor] = useState('#6c7cdd'); // Default Tiimo blue
+  const [selectedIcon, setSelectedIcon] = useState('✨'); // Default sparkle icon
+
+  const colors = ['#6c7cdd', '#ffc107', '#28a745', '#fd7e14', '#e83e8c', '#6f42c1', '#20c997', '#007bff'];
+  const icons = [
+    '✨', '📚', '☕', '🛒', '🏃‍♂️', '🧘‍♀️', '🚿', '💻', '🍽️', '😴', 
+    '📞', '💡', '🎵', '🚗', '🏥', '🎉', '✈️', '🐶', '📝', '💪'
+  ];
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle('');
+      setStartTime('');
+      setDuration(30);
+      setIsAnytime(false);
+      setSelectedColor('#6c7cdd');
+      setSelectedIcon('✨');
+    }
+  }, [isOpen]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+
+    const newTask = {
+      id: uuidv4(),
+      title,
+      startTime: isAnytime ? null : startTime,
+      duration,
+      isAnytime,
+      color: selectedColor,
+      icon: selectedIcon,
+      isCompleted: false,
+    };
+    onSaveTask(newTask);
+    onClose();
   };
 
-  const getMicrophonePermission = async () => {
-    setError(null);
-    addDebug('Get Microphone button clicked');
-    
-    // Check if MediaRecorder exists
-    if (!('MediaRecorder' in window)) {
-      const msg = 'MediaRecorder API is not supported on this system.';
-      addDebug('ERROR: ' + msg);
-      setError(msg);
-      alert(msg);
-      return;
-    }
-    addDebug('MediaRecorder API is available');
+  if (!isOpen) return null;
 
-    // Check if getUserMedia exists
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      const msg = 'getUserMedia is not supported on this system.';
-      addDebug('ERROR: ' + msg);
-      setError(msg);
-      alert(msg);
-      return;
-    }
-    addDebug('getUserMedia API is available');
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2>Add New Task</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="task-title">Task Title</label>
+            <input
+              id="task-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Study React Hooks"
+              required
+            />
+          </div>
 
-    try {
-      addDebug('Requesting microphone access...');
-      const streamData = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false,
+          <div className="checkbox-group">
+            <input
+              id="is-anytime"
+              type="checkbox"
+              checked={isAnytime}
+              onChange={(e) => setIsAnytime(e.target.checked)}
+            />
+            <label htmlFor="is-anytime">Anytime Task</label>
+          </div>
+
+          {!isAnytime && (
+            <div className="form-group">
+              <label htmlFor="start-time">Start Time</label>
+              <input
+                id="start-time"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required={!isAnytime}
+              />
+            </div>
+          )}
+
+          <div className="form-group">
+            <label htmlFor="duration">Duration (minutes)</label>
+            <input
+              id="duration"
+              type="number"
+              min="5"
+              step="5"
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Color</label>
+            <div className="color-picker-grid">
+              {colors.map((color) => (
+                <div
+                  key={color}
+                  className={\`color-swatch \${selectedColor === color ? 'selected' : ''}\`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setSelectedColor(color)}
+                ></div>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Icon</label>
+            <div className="icon-picker-grid">
+              {icons.map((icon) => (
+                <div
+                  key={icon}
+                  className={\`icon-option \${selectedIcon === icon ? 'selected' : ''}\`}
+                  onClick={() => setSelectedIcon(icon)}
+                >
+                  {icon}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="modal-buttons">
+            <button type="button" className="modal-button cancel" onClick={onClose}>Cancel</button>
+            <button type="submit" className="modal-button save">Save Task</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const FocusTimer = ({ activeTask, onPauseTimer, onEndTimer }) => {
+  const [timeRemaining, setTimeRemaining] = useState(activeTask.duration * 60); // seconds
+  const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    // Initialize time remaining when activeTask changes
+    setTimeRemaining(activeTask.duration * 60);
+    setIsPaused(false);
+    startTimer();
+
+    return () => clearInterval(intervalRef.current);
+  }, [activeTask]);
+
+  const startTimer = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setTimeRemaining((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(intervalRef.current);
+          onEndTimer(); // Automatically end task when timer runs out
+          return 0;
+        }
+        return prevTime - 1;
       });
-      addDebug('Microphone access granted!');
-      addDebug(\`Stream tracks: \${streamData.getTracks().length}\`);
-      setPermission(true);
-      setStream(streamData);
-    } catch (err) {
-      const msg = \`Error getting microphone: \${err.name} - \${err.message}\`;
-      addDebug('ERROR: ' + msg);
-      setError(msg);
-      alert(msg);
-    }
+    }, 1000);
   };
 
-  const startRecording = async () => {
-    setError(null);
-    addDebug('Start Recording button clicked');
-    setRecordingStatus('recording');
-    setAudio(null);
-
-    try {
-      addDebug('Creating MediaRecorder instance...');
-      const media = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      mediaRecorder.current = media;
-      
-      addDebug(\`MediaRecorder state: \${media.state}\`);
-      addDebug(\`MediaRecorder mimeType: \${media.mimeType}\`);
-      
-      audioChunks.current = [];
-
-      mediaRecorder.current.ondataavailable = (event) => {
-        addDebug(\`Data available: \${event.data.size} bytes\`);
-        if (typeof event.data === 'undefined') return;
-        if (event.data.size === 0) return;
-        audioChunks.current.push(event.data);
-      };
-
-      mediaRecorder.current.onerror = (event) => {
-        const msg = \`MediaRecorder error: \${event.error}\`;
-        addDebug('ERROR: ' + msg);
-        setError(msg);
-      };
-
-      mediaRecorder.current.start();
-      addDebug('Recording started');
-    } catch (err) {
-      const msg = \`Error starting recording: \${err.name} - \${err.message}\`;
-      addDebug('ERROR: ' + msg);
-      setError(msg);
-      setRecordingStatus('inactive');
+  const pauseResumeTimer = () => {
+    if (isPaused) {
+      startTimer();
+    } else {
+      clearInterval(intervalRef.current);
     }
+    setIsPaused(!isPaused);
+    onPauseTimer(!isPaused); // Notify parent of pause state
   };
 
-  const stopRecording = () => {
-    setError(null);
-    addDebug('Stop Recording button clicked');
-    setRecordingStatus('inactive');
-    
-    try {
-      mediaRecorder.current.stop();
-      addDebug('Recording stopped');
-      
-      mediaRecorder.current.onstop = () => {
-        addDebug(\`Total chunks collected: \${audioChunks.current.length}\`);
-        const totalSize = audioChunks.current.reduce((sum, chunk) => sum + chunk.size, 0);
-        addDebug(\`Total audio size: \${totalSize} bytes\`);
-        
-        const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        addDebug(\`Blob URL created: \${audioUrl}\`);
-        setAudio(audioUrl);
-        audioChunks.current = [];
-      };
-    } catch (err) {
-      const msg = \`Error stopping recording: \${err.name} - \${err.message}\`;
-      addDebug('ERROR: ' + msg);
-      setError(msg);
-    }
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return \`\${minutes < 10 ? '0' : ''}\${minutes}:\${remainingSeconds < 10 ? '0' : ''}\${remainingSeconds}\`;
   };
+
+  const progress = (activeTask.duration * 60 - timeRemaining) / (activeTask.duration * 60) * 100;
+
+  return (
+    <div className="focus-timer-container">
+      <h2>Focus Time!</h2>
+      <p className="focus-timer-task-title">{activeTask.icon} {activeTask.title}</p>
+      <div className="focus-timer-ring" style={{'--progress': \`\${progress}%\`}}>
+        <span className="focus-timer-time">{formatTime(timeRemaining)}</span>
+      </div>
+      <div className="focus-timer-buttons">
+        <button onClick={pauseResumeTimer} className="focus-timer-button pause">
+          {isPaused ? 'Resume' : 'Pause'}
+        </button>
+        <button onClick={onEndTimer} className="focus-timer-button end">End Task</button>
+      </div>
+    </div>
+  );
+};
+
+const App = () => {
+  const [tasks, setTasks] = useState(() => {
+    // Load tasks from local storage or use default
+    const savedTasks = localStorage.getItem('tiimo_tasks');
+    return savedTasks ? JSON.parse(savedTasks) : [
+      { id: '1', title: 'Morning Routine', startTime: '08:00', duration: 30, isAnytime: false, color: '#28a745', icon: '🚿', isCompleted: false },
+      { id: '2', title: 'Breakfast', startTime: '08:30', duration: 20, isAnytime: false, color: '#fd7e14', icon: '🍽️', isCompleted: false },
+      { id: '3', title: 'Check Emails', startTime: '09:00', duration: 15, isAnytime: false, color: '#6c7cdd', icon: '💻', isCompleted: false },
+      { id: '4', title: 'Read Book', startTime: null, duration: 45, isAnytime: true, color: '#e83e8c', icon: '📚', isCompleted: false },
+      { id: '5', title: 'Go for a walk', startTime: '15:00', duration: 60, isAnytime: false, color: '#20c997', icon: '🏃‍♂️', isCompleted: false },
+    ];
+  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTask, setActiveTask] = useState(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  useEffect(() => {
+    localStorage.setItem('tiimo_tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
+  const formattedDate = currentDate.toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  const handleAddTask = (newTask) => {
+    setTasks((prevTasks) => [...prevTasks, newTask]);
+  };
+
+  const handleStartTask = (task) => {
+    setActiveTask(task);
+  };
+
+  const handlePauseTimer = (isPaused) => {
+    // Logic to handle pause state if needed, e.g., update task status in state
+    console.log(\`Task \${activeTask.title} is \${isPaused ? 'paused' : 'resumed'}\`);
+  };
+
+  const handleEndTimer = () => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === activeTask.id ? { ...task, isCompleted: true } : task
+      )
+    );
+    setActiveTask(null);
+  };
+
+  const scheduledTasks = tasks
+    .filter(task => !task.isAnytime && !task.isCompleted)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const anytimeTasks = tasks
+    .filter(task => task.isAnytime && !task.isCompleted);
 
   return (
     <div className="app-container">
-      <Header title="macOS Voice Recorder" />
-      <main className="recorder-container">
-        {error && (
-          <div style={{ 
-            padding: '10px', 
-            backgroundColor: '#e74c3c', 
-            color: 'white', 
-            borderRadius: '5px',
-            marginBottom: '10px',
-            fontSize: '0.9em'
-          }}>
-            <strong>Error:</strong> {error}
-          </div>
-        )}
-        
-        {!permission ? (
-          <button onClick={getMicrophonePermission} className="action-button" type="button">
-            Get Microphone
-          </button>
-        ) : null}
-        
-        {permission && recordingStatus === 'inactive' ? (
-          <button onClick={startRecording} className="action-button record-button" type="button">
-            Start Recording
-          </button>
-        ) : null}
-        
-        {recordingStatus === 'recording' ? (
-          <button onClick={stopRecording} className="action-button stop-button" type="button">
-            Stop Recording
-          </button>
-        ) : null}
-        
-        {audio ? (
-          <div className="audio-player">
-            <audio src={audio} controls></audio>
-            <a download="macos-voice-recording.webm" href={audio} className="download-button">
-              Download Recording
-            </a>
-          </div>
-        ) : null}
+      <Header title={formattedDate} onAddTaskClick={() => setIsModalOpen(true)} />
 
-        {/* Debug Console */}
-        <div style={{
-          marginTop: '20px',
-          padding: '15px',
-          backgroundColor: '#2c3e50',
-          borderRadius: '5px',
-          maxHeight: '200px',
-          overflowY: 'auto',
-          width: '100%',
-          textAlign: 'left',
-          fontSize: '0.75em',
-          fontFamily: 'monospace',
-          border: '1px solid #7f8c8d'
-        }}>
-          <div style={{ marginBottom: '5px', fontWeight: 'bold', color: '#3498db' }}>
-            Debug Console:
-          </div>
-          {debugInfo.length === 0 ? (
-            <div style={{ color: '#95a5a6' }}>No debug messages yet...</div>
-          ) : (
-            debugInfo.map((msg, idx) => (
-              <div key={idx} style={{ 
-                color: msg.includes('ERROR') ? '#e74c3c' : '#2ecc71',
-                marginBottom: '3px'
-              }}>
-                {msg}
+      {activeTask ? (
+        <FocusTimer
+          activeTask={activeTask}
+          onPauseTimer={handlePauseTimer}
+          onEndTimer={handleEndTimer}
+        />
+      ) : (
+        <main className="timeline-section">
+          {scheduledTasks.length > 0 && (
+            <div className="scheduled-tasks">
+              <h2>Today's Schedule</h2>
+              <div className="task-list">
+                {scheduledTasks.map((task) => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onStartTask={handleStartTask}
+                    isActive={activeTask && activeTask.id === task.id}
+                    taskColor={task.color}
+                  />
+                ))}
               </div>
-            ))
+            </div>
           )}
-        </div>
-      </main>
+
+          {anytimeTasks.length > 0 && (
+            <div className="anytime-tasks">
+              <h2>Anytime</h2>
+              <div className="task-list">
+                {anytimeTasks.map((task) => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onStartTask={handleStartTask}
+                    isActive={activeTask && activeTask.id === task.id}
+                    taskColor={task.color}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {scheduledTasks.length === 0 && anytimeTasks.length === 0 && (
+            <p style={{ textAlign: 'center', color: '#888' }}>No tasks scheduled. Click '+ Add Task' to get started!</p>
+          )}
+        </main>
+      )}
+
+      <AddTaskModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSaveTask={handleAddTask}
+      />
     </div>
   );
 };
 
 export default App;`,
-    'src/Header.jsx': `import React from 'react';
-
-  const Header = ({ title }) => (
-    <h1 className="header-title">{title}</h1>
-  );
-
-  export default Header; `,
-    'readme.md': `# macOS Voice Recorder
-
-A simple voice recording and playback desktop application for macOS, built with React.This application uses web technologies running in a native desktop shell(e.g., using a framework like Electron or Tauri).
-
-## Description
-
-This project demonstrates how to use the browser's \`MediaRecorder\` API within a React application to capture audio from a user's microphone.It allows users to record their voice, stop the recording, and then play it back or download it.
-
-This application is built with React and utilizes functional components and hooks(\`useState\`, \`useRef\`).
+    'readme.md': `# Tiimo Task Planner
+A visual task planner and focus timer inspired by Tiimo. 
 
 ## Features
-
--   Microphone access request.
--   Start and stop audio recording.
--   Playback of the recorded audio.
--   Download the recording as a \`.webm\` file.
--   Clean, modern UI.
-
-## Getting Started
-
-To run this project in a development environment, you'll need Node.js and npm installed.
-
-1.  **Clone the repository (if applicable) and navigate into the project directory.**
-
-2.  **Install dependencies:**
-    \`\`\`bash
-    npm install
-    \`\`\`
-
-3.  **Start the application:**
-    \`\`\`bash
-    npm start
-    \`\`\`
-The application will launch in a new window.
-
-## How to Use
-
-1.  Launch the application.
-2.  Click the **"Get Microphone"** button and grant the necessary permission when the system prompts you.
-3.  Click the **"Start Recording"** button to begin recording your voice.
-4.  When you're finished, click the **"Stop Recording"** button.
-5.  An audio player will appear, allowing you to listen to your recording.
-6.  You can also click the **"Download Recording"** link to save the audio file to your computer.`
+- Schedule tasks for specific times
+- Create "Anytime" tasks
+- Visual focus timer with progress ring
+- Custom icons and colors for each task
+- Data persistence via LocalStorage`
   };
 
   // Load from localStorage or use default
