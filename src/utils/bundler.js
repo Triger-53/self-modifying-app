@@ -237,8 +237,15 @@ export const bundle = async (files) => {
     // Create the bundle string
     // We use JSON.stringify to safely serialize the code strings, avoiding all escaping issues.
     // We also use a cache for modules to ensure they are only executed once.
+    // IMPORTANT: We must escape backticks and ${ in the serialized JSON because they are 
+    // injected into a template literal below.
+    const escapedSource = JSON.stringify(modulesMap)
+        .replace(/\\`/g, '\\\\`') // First escape existing escaped backticks
+        .replace(/`/g, '\\`')     // Then escape raw backticks
+        .replace(/\$\{/g, '\\${'); // Escape template interpolation
+
     const bundleCode = `
-    const modulesSource = ${JSON.stringify(modulesMap)};
+    const modulesSource = ${escapedSource};
     const modules = {};
     const cache = {};
     

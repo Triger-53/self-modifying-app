@@ -899,8 +899,9 @@ A visual task planner and focus timer inspired by Tiimo.
       const response = result.response;
       const text = response.text();
 
-      // Clean up markdown if present
-      const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      // Robust JSON extraction: Find the first '{' and the last '}'
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const cleanJson = jsonMatch ? jsonMatch[0] : text;
 
       try {
         const changes = JSON.parse(cleanJson);
@@ -934,6 +935,7 @@ A visual task planner and focus timer inspired by Tiimo.
         setPrompt('');
       } catch (e) {
         console.error("JSON Parse Error", e);
+        console.error("Raw response text:", text);
         setStatus('Error parsing AI response');
       }
     } catch (err) {
