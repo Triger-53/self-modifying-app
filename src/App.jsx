@@ -1200,10 +1200,11 @@ A visual task planner and focus timer inspired by Tiimo.
           <div className="mobile-chat-container">
             <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', overflowX: 'auto', paddingBottom: '4px', pointerEvents: 'auto' }}>
               {[
-                { id: 'minimal', icon: '�' },
-                { id: 'low', icon: '🌘' },
-                { id: 'medium', icon: '🌗' },
-                { id: 'high', icon: '�' }
+                { id: 'minimal', icon: '⚡' },
+                { id: 'standard', icon: '🧠' },
+                { id: 'advanced', icon: '🧬' },
+                { id: 'pro', icon: '🌌' },
+                { id: 'ultra', icon: '🔮' }
               ].map(level => (
                 <button
                   key={level.id}
