@@ -1375,6 +1375,7 @@ A visual task planner and focus timer inspired by Tiimo.
         }
         .mobile-chat-inner {
            display: flex;
+           align-items: center;
            gap: 10px;
            background: rgba(20, 27, 45, 0.9);
            backdrop-filter: blur(20px);
