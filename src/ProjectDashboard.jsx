@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 
-const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreateProject, onDeleteProject, onCloneProject, onRenameProject }) => {
+const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreateProject, onDeleteProject, onCloneProject, onRenameProject, onUpdateLogo }) => {
     const [isCreating, setIsCreating] = useState(false);
     const [newProjectName, setNewProjectName] = useState('');
     const [editingProjectId, setEditingProjectId] = useState(null);
     const [editName, setEditName] = useState('');
+    const [logoPickerId, setLogoPickerId] = useState(null);
 
     const handleCreate = () => {
         if (newProjectName.trim()) {
@@ -20,6 +21,8 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
             setEditingProjectId(null);
         }
     };
+
+    const emojis = ['🚀', '✨', '🔥', '💎', '🌈', '🧩', '💻', '📱', '🎨', '🎵', '🕹️', '🛡️', '⚡', '🤖', '🌍', '📦'];
 
     return (
         <div style={{
@@ -151,18 +154,44 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                             }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <div style={{
-                                    width: '60px',
-                                    height: '60px',
-                                    borderRadius: '16px',
-                                    background: 'var(--gradient-primary)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '1.8rem',
-                                    boxShadow: '0 8px 20px rgba(102, 126, 234, 0.3)'
-                                }}>
-                                    {project.name[0].toUpperCase()}
+                                <div
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setLogoPickerId(logoPickerId === project.id ? null : project.id);
+                                    }}
+                                    style={{
+                                        width: '64px',
+                                        height: '64px',
+                                        borderRadius: '18px',
+                                        background: 'var(--gradient-primary)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '2rem',
+                                        boxShadow: '0 8px 20px rgba(102, 126, 234, 0.3)',
+                                        overflow: 'hidden',
+                                        position: 'relative',
+                                        transition: 'transform 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                >
+                                    {project.logo?.startsWith('http') || project.logo?.startsWith('data:') ? (
+                                        <img src={project.logo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="logo" />
+                                    ) : (
+                                        project.logo || project.name[0].toUpperCase()
+                                    )}
+                                    <div style={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        width: '100%',
+                                        background: 'rgba(0,0,0,0.5)',
+                                        fontSize: '0.6rem',
+                                        textAlign: 'center',
+                                        padding: '2px 0',
+                                        opacity: 0,
+                                        transition: 'opacity 0.2s'
+                                    }} className="logo-edit-hint">EDIT</div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <button
@@ -184,6 +213,47 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                                     >✏️</button>
                                 </div>
                             </div>
+
+                            {logoPickerId === project.id && (
+                                <div
+                                    onClick={e => e.stopPropagation()}
+                                    style={{
+                                        position: 'absolute',
+                                        top: '100px',
+                                        left: '30px',
+                                        zIndex: 10,
+                                        background: '#1c2538',
+                                        border: '1px solid #667eea',
+                                        borderRadius: '12px',
+                                        padding: '15px',
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                                        width: '240px'
+                                    }}
+                                >
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                                        {emojis.map(emoji => (
+                                            <button
+                                                key={emoji}
+                                                onClick={() => {
+                                                    onUpdateLogo(project.id, emoji);
+                                                    setLogoPickerId(null);
+                                                }}
+                                                style={{ fontSize: '1.2rem', padding: '5px', background: 'transparent', boxShadow: 'none' }}
+                                            >{emoji}</button>
+                                        ))}
+                                    </div>
+                                    <input
+                                        placeholder="Or paste Image URL..."
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                onUpdateLogo(project.id, e.target.value);
+                                                setLogoPickerId(null);
+                                            }
+                                        }}
+                                        style={{ width: '100%', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white', fontSize: '0.8rem' }}
+                                    />
+                                </div>
+                            )}
 
                             {editingProjectId === project.id ? (
                                 <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '8px' }}>
@@ -229,7 +299,7 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (confirm(`Delete "${project.name}" ? `)) {
+                                        if (confirm(`Delete "${project.name}"?`)) {
                                             onDeleteProject(project.id);
                                         }
                                     }}
@@ -266,6 +336,10 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                     ))}
                 </div>
             </div>
+            <style>{`
+                .logo-edit-hint { opacity: 0; }
+                div:hover > .logo-edit-hint { opacity: 1; }
+            `}</style>
         </div>
     );
 };

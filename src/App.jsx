@@ -767,6 +767,7 @@ A visual task planner and focus timer inspired by Tiimo.
     return [{
       id: 'default',
       name: 'My First App',
+      logo: '🚀',
       files: initialFiles,
       lastModified: Date.now()
     }];
@@ -975,6 +976,7 @@ A visual task planner and focus timer inspired by Tiimo.
     const newProject = {
       id: Date.now().toString(),
       name: name,
+      logo: '✨',
       files: { ...defaultFiles },
       lastModified: Date.now()
     };
@@ -1016,6 +1018,10 @@ A visual task planner and focus timer inspired by Tiimo.
 
   const handleRenameProject = (id, newName) => {
     setProjects(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
+  };
+
+  const handleUpdateLogo = (id, newLogo) => {
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, logo: newLogo } : p));
   };
 
   // Runtime Component to execute the bundled code
@@ -1159,6 +1165,7 @@ A visual task planner and focus timer inspired by Tiimo.
           onDeleteProject={handleDeleteProject}
           onCloneProject={handleCloneProject}
           onRenameProject={handleRenameProject}
+          onUpdateLogo={handleUpdateLogo}
         />
       ) : (
         <>
@@ -1173,7 +1180,7 @@ A visual task planner and focus timer inspired by Tiimo.
             backdropFilter: 'blur(20px)',
             boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)'
           }}>
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
               <button
                 onClick={() => setView('dashboard')}
                 style={{
@@ -1188,16 +1195,35 @@ A visual task planner and focus timer inspired by Tiimo.
                   transition: 'all 0.25s'
                 }}
               >🏠 Apps</button>
-              <h2 style={{
-                margin: 0,
-                fontSize: '1.4rem',
-                fontWeight: 800,
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '-0.02em'
-              }}>✨ {currentProject.name}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  background: 'var(--gradient-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.2rem',
+                  overflow: 'hidden'
+                }}>
+                  {currentProject.logo?.startsWith('http') || currentProject.logo?.startsWith('data:') ? (
+                    <img src={currentProject.logo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="logo" />
+                  ) : (
+                    currentProject.logo || currentProject.name[0].toUpperCase()
+                  )}
+                </div>
+                <h2 style={{
+                  margin: 0,
+                  fontSize: '1.4rem',
+                  fontWeight: 800,
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  letterSpacing: '-0.02em'
+                }}>{currentProject.name}</h2>
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <button
