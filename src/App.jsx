@@ -866,49 +866,42 @@ A visual task planner and focus timer inspired by Tiimo.
       if (!apiKey) throw new Error('API Key missing');
 
       const genAI = new GoogleGenerativeAI(apiKey);
+
+      // Use System Instructions for better reliability
       const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash", // Use a stable flash model
-        generationConfig: {
-          maxOutputTokens: 8192,
-          temperature: 0.1, // Ensure maximum stability
-        }
+        model: "gemini-1.5-flash",
+        systemInstruction: `You are an expert React developer. 
+        You modify a Virtual File System (VFS) based on user requests.
+        ALWAYS return a valid JSON object.
+        ONLY include files that were modified or created.
+        
+        OUTPUT SCHEMA:
+        {
+          "files": {
+            "path/to/file.jsx": "Full updated content"
+          },
+          "deletedFiles": ["path/to/file.js"]
+        }`,
       });
 
-      const fullPrompt = `Expert React Dev. 
-Modify the VFS based on prompt.
+      const generationConfig = {
+        temperature: 0.1,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 8192,
+        responseMimeType: "application/json",
+      };
 
-CURRENT VFS:
-${JSON.stringify(files)}
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: `VFS: ${JSON.stringify(files)}\n\nUSER REQUEST: ${prompt}` }] }],
+        generationConfig
+      });
 
-PROMPT:
-${prompt}
-
-OUTPUT:
-JSON ONLY. No talk. ONLY include changed files.
-
-{
-  "files": { "path/to/file": "content" },
-  "deletedFiles": ["path"]
-}`;
-
-      const result = await model.generateContent(fullPrompt);
       const response = result.response;
-      let text = response.text().trim();
-
-      // Robust JSON extraction
-      let cleanJson = text;
-      const firstCurly = text.indexOf('{');
-      const lastCurly = text.lastIndexOf('}');
-      if (firstCurly !== -1 && lastCurly !== -1 && lastCurly > firstCurly) {
-        cleanJson = text.substring(firstCurly, lastCurly + 1);
-      } else if (firstCurly !== -1 && lastCurly === -1) {
-        // Detected truncation: AI started a JSON but never finished. 
-        // We can't safely parse this, but we'll try to find the last valid block.
-        throw new Error("AI response was truncated. Try a smaller request.");
-      }
+      let text = response.text();
 
       try {
-        const changes = JSON.parse(cleanJson);
+        const changes = JSON.parse(text);
 
         setFiles(prev => {
           const newFiles = { ...prev };
