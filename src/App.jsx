@@ -1012,6 +1012,69 @@ export default App;`,
   const [thinkingLevel, setThinkingLevel] = useState('medium');
   const [thinkingProcess, setThinkingProcess] = useState('');
   const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [attachment, setAttachment] = useState(null); // { data: base64, mimeType: string }
+
+  useEffect(() => {
+    // Request notification permission
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false); // Stop logic handled by end event usually, but we can force stop if needed
+      return;
+    }
+
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setPrompt(prev => prev + (prev ? ' ' : '') + transcript);
+    };
+
+    recognition.start();
+  };
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // Remove data URL prefix e.g. "data:image/jpeg;base64,"
+        const base64Data = reader.result.split(',')[1];
+        setAttachment({
+          data: base64Data,
+          mimeType: file.type
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const sendNotification = (title, body) => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title, { body, icon: '✨' });
+    }
+    // Also play a sound
+    try {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Gentle chime
+      audio.volume = 0.5;
+      audio.play().catch(e => console.log('Audio play failed', e));
+    } catch (e) { }
+  };
 
   // Save to localStorage
   useEffect(() => {
@@ -1127,28 +1190,41 @@ export default App;`,
       });
 
       const THINKING_CONFIGS = {
-        minimal: { thinking_level: 'MINIMAL', temperature: 0.1, topP: 0.8, topK: 10 },
-        low: { thinking_level: 'LOW', temperature: 0.3, topP: 0.9, topK: 25 },
-        medium: { thinking_level: 'MEDIUM', temperature: 0.6, topP: 0.95, topK: 45 },
-        high: { thinking_level: 'HIGH', temperature: 0.9, topP: 0.99, topK: 80 }
+        minimal: { temperature: 0.1, topP: 0.8, topK: 10 },
+        low: { temperature: 0.3, topP: 0.9, topK: 25 },
+        medium: { temperature: 0.6, topP: 0.95, topK: 45 },
+        high: { temperature: 0.9, topP: 0.99, topK: 80 }
       };
 
       const config = THINKING_CONFIGS[thinkingLevel] || THINKING_CONFIGS.medium;
 
       const generationConfig = {
         ...config,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 32000,
         responseMimeType: "application/json",
       };
+
+      const parts = [
+        {
+          text: `VFS: ${JSON.stringify(files)}\n\n` +
+            (referenceApp.url || referenceApp.description ? `REFERENCE APP INFO:\nURL: ${referenceApp.url}\nDescription: ${referenceApp.description}\n\n` : '') +
+            `USER REQUEST: ${prompt}`
+        }
+      ];
+
+      if (attachment) {
+        parts.push({
+          inlineData: {
+            mimeType: attachment.mimeType,
+            data: attachment.data
+          }
+        });
+      }
 
       const result = await model.generateContent({
         contents: [{
           role: "user",
-          parts: [{
-            text: `VFS: ${JSON.stringify(files)}\n\n` +
-              (referenceApp.url || referenceApp.description ? `REFERENCE APP INFO:\nURL: ${referenceApp.url}\nDescription: ${referenceApp.description}\n\n` : '') +
-              `USER REQUEST: ${prompt}`
-          }]
+          parts: parts
         }],
         generationConfig
       });
@@ -1194,15 +1270,19 @@ export default App;`,
         });
 
         setStatus('Changes applied!');
+        sendNotification('Build Complete! 🚀', 'Your app has been updated successfully.');
         setPrompt('');
+        setAttachment(null);
       } catch (e) {
         console.error("JSON Parse Error", e);
         console.error("Raw response text:", text);
         setStatus('Error parsing AI response');
+        sendNotification('Build Failed ❌', 'There was an error parsing the AI response.');
       }
     } catch (err) {
       console.error(err);
       setStatus('AI Error: ' + err.message);
+      sendNotification('AI Error ⚠️', err.message);
     } finally {
       setLoading(false);
     }
@@ -1564,23 +1644,73 @@ export default App;`,
                 </div>
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="e.g. 'Add a dark mode', 'Change the font to Inter', 'Make a task list with priorities'..."
-                    style={{
-                      flex: 1,
-                      padding: '20px',
-                      background: 'rgba(10, 14, 39, 0.4)',
-                      border: '1px solid rgba(102, 126, 234, 0.2)',
-                      borderRadius: '20px',
-                      color: 'white',
-                      fontSize: '1rem',
-                      resize: 'none',
-                      outline: 'none',
-                      transition: 'all 0.3s'
-                    }}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <textarea
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      placeholder="Describe what you want to build..."
+                      style={{
+                        width: '100%',
+                        height: '120px',
+                        padding: '15px',
+                        background: 'rgba(10, 14, 39, 0.4)',
+                        border: '1px solid rgba(102, 126, 234, 0.2)',
+                        borderRadius: '20px',
+                        color: 'white',
+                        fontSize: '1rem',
+                        resize: 'none',
+                        outline: 'none',
+                        transition: 'all 0.3s'
+                      }}
+                    />
+                    <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={handleVoiceInput}
+                        className={isListening ? 'listening' : ''}
+                        style={{
+                          background: isListening ? '#ef476f' : 'rgba(255,255,255,0.1)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '36px',
+                          height: '36px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s'
+                        }}
+                        title="Voice Dictation"
+                      >
+                        🎤
+                      </button>
+                      <label
+                        style={{
+                          background: 'rgba(255,255,255,0.1)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '36px',
+                          height: '36px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s',
+                          border: attachment ? '2px solid #06d6a0' : 'none'
+                        }}
+                        title="Take Photo / Upload Image"
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleImageSelect}
+                          style={{ display: 'none' }}
+                        />
+                        {attachment ? '✅' : '📷'}
+                      </label>
+                    </div>
+                  </div>
 
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button
