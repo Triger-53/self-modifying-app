@@ -1153,7 +1153,7 @@ export default App;`,
 
       const genAI = new GoogleGenerativeAI(apiKey);
 
-      const selectedModel = thinkingLevel === 'ultrafast' || thinkingLevel === 'ultrafast' ? "gemini-2.0-flash-lite-preview-02-05" : "gemini-3-flash-preview";
+      const selectedModel = thinkingLevel === 'ultrafast' || thinkingLevel === 'ultrafast' ? "gemini-2.5-flash-lite" : "gemini-3-flash-preview";
 
       // Use System Instructions for better reliability
       const model = genAI.getGenerativeModel({
@@ -1465,6 +1465,28 @@ export default App;`,
                 placeholder="Describe changes..."
                 style={{ flex: 1, minWidth: 0, padding: '10px 12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '25px', color: 'white', fontSize: '0.9rem', outline: 'none' }}
               />
+              <button
+                onClick={handleVoiceInput}
+                className={isListening ? 'listening' : ''}
+                style={{
+                  width: '36px', height: '36px', borderRadius: '50%', border: 'none',
+                  background: isListening ? '#ef476f' : 'rgba(255,255,255,0.1)', color: 'white',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem',
+                  flexShrink: 0
+                }}
+              >🎤</button>
+              <label
+                style={{
+                  width: '36px', height: '36px', borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.1)', color: 'white',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem',
+                  border: attachment ? '2px solid #06d6a0' : 'none',
+                  flexShrink: 0
+                }}
+              >
+                <input type="file" accept="image/*" capture="environment" onChange={handleImageSelect} style={{ display: 'none' }} />
+                {attachment ? '✅' : '📷'}
+              </label>
               <button
                 onClick={() => setIsReferenceModalOpen(true)}
                 style={{
