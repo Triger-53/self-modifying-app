@@ -85,735 +85,867 @@ function ReferenceAppModal({ isOpen, onClose, referenceData, onSave }) {
 
 const App = () => {
   // Initial default files
-  const defaultFiles = {
-    'src/App.css': `/* General styles for the Tiimo-like app */
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f0f2f5; /* Light grey background */
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start; /* Align to top, not center */
-      min-height: 100vh;
-      color: #333;
-      overflow-y: auto;
-  }
-
-.app-container {
-  background-color: #ffffff; /* White card background */
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 95%;
-  max-width: 600px;
-  margin: 20px 0;
-  min-height: calc(100vh - 40px);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  const tiimoFiles = {
+    'src/App.css': `/* Tiimo-inspired Design System */
+:root {
+  --primary: #6c7cdd;
+  --primary-light: #eef0fb;
+  --bg-main: #fdfcfb;
+  --bg-card: #ffffff;
+  --text-main: #2d2d2d;
+  --text-muted: #8e8e93;
+  --accent-green: #06d6a0;
+  --accent-yellow: #ffd166;
+  --accent-pink: #ef476f;
+  --border-radius: 24px;
+  --nav-height: 80px;
+  --safe-area-bottom: 20px;
 }
 
-.header-container {
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f0f0f5;
+  color: var(--text-main);
+}
+
+#root {
+  height: 100%;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d1d6;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a6;
+}
+
+.app-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--bg-main);
+  position: relative;
+  box-shadow: 0 0 40px rgba(0,0,0,0.1);
+}
+
+/* Header */
+.header {
+  padding: 30px 24px 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
-  margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
-.header-title {
-  color: #6a6a6a;
-  font-size: 1.8em;
-  font-weight: bold;
+.header h1 {
+  font-size: 2rem;
   margin: 0;
-  text-align: left;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
-.add-task-button {
-  background-color: #6c7cdd; /* Tiimo blue */
-  color: white;
+.ai-sparkle-btn {
+  background: var(--primary-light);
   border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-size: 1em;
-  font-weight: bold;
+  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  font-size: 1.4rem;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: var(--primary);
 }
 
-.add-task-button:hover {
-  background-color: #5a6cd3;
+.ai-sparkle-btn:active { transform: scale(0.9); }
+
+/* Main Content Area */
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 20px;
 }
 
-.timeline-section {
-  text-align: left;
+/* Task Cards */
+.section-title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  margin: 24px 0 12px;
+  font-weight: 700;
+}
+
+.task-card {
+  background: var(--bg-card);
+  border-radius: var(--border-radius);
+  padding: 18px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+  border-left: 8px solid var(--primary);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.task-card:active { transform: scale(0.97); }
+
+.task-icon {
+  font-size: 1.6rem;
+  background: #f8f9fa;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+.task-info {
+  flex: 1;
+}
+
+.task-info h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.task-info p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Focus View */
+.focus-view {
+  position: absolute;
+  inset: 0;
+  background: white;
+  z-index: 200;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-}
-
-.timeline-section h2 {
-  font-size: 1.4em;
-  color: #555;
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-.task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.task-item {
-  display: flex;
   align-items: center;
-  background-color: #fdfdfd;
-  padding: 12px 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border-left: 5px solid;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
-}
-
-.task-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.task-item.active {
-  background-color: #e0e7ff; /* Light blue for active task */
-  border-left: 5px solid #6c7cdd;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  font-weight: bold;
-}
-
-.task-item-icon {
-  font-size: 1.5em;
-  margin-right: 10px;
-}
-
-.task-item-time {
-  font-weight: 600;
-  min-width: 60px;
-  margin-right: 10px;
-  color: #777;
-}
-
-.task-item.anytime .task-item-time {
-  font-style: italic;
-  color: #999;
-}
-
-.task-item-title {
-  flex-grow: 1;
-  text-align: left;
-  font-size: 1.1em;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-  width: 90%;
-  max-width: 450px;
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-content h2 {
-  color: #333;
-  font-size: 1.6em;
-  margin-top: 0;
-  margin-bottom: 25px;
-}
-
-.form-group {
-  margin-bottom: 18px;
-  text-align: left;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-  color: #555;
-  font-size: 0.95em;
-}
-
-.form-group input[type="text"],
-.form-group input[type="time"],
-.form-group input[type="number"] {
-  width: calc(100% - 20px);
-  padding: 12px 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1em;
-  transition: border-color 0.2s ease;
-}
-
-.form-group input[type="text"]:focus,
-.form-group input[type="time"]:focus,
-.form-group input[type="number"]:focus {
-  outline: none;
-  border-color: #6c7cdd;
-}
-
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.checkbox-group input[type="checkbox"] {
-  margin-right: 10px;
-  width: 18px;
-  height: 18px;
-  accent-color: #6c7cdd;
-}
-
-.checkbox-group label {
-  font-weight: normal;
-  color: #555;
-  margin-bottom: 0;
-}
-
-.color-picker-grid, .icon-picker-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-  gap: 10px;
-  margin-top: 10px;
-  margin-bottom: 20px;
-}
-
-.color-swatch {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: border-color 0.2s ease, transform 0.1s ease;
-}
-
-.color-swatch.selected {
-  border-color: #6c7cdd;
-  transform: scale(1.05);
-}
-
-.icon-option {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.8em;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  background-color: #f5f5f5;
-  transition: border-color 0.2s ease, transform 0.1s ease, background-color 0.2s ease;
-}
-
-.icon-option:hover {
-  background-color: #e0e7ff;
-}
-
-.icon-option.selected {
-  border-color: #6c7cdd;
-  transform: scale(1.05);
-  background-color: #e0e7ff;
-}
-
-.modal-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 25px;
-}
-
-.modal-button {
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1em;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.modal-button.cancel {
-  background-color: #e0e0e0;
-  color: #555;
-}
-
-.modal-button.cancel:hover {
-  background-color: #d0d0d0;
-}
-
-.modal-button.save {
-  background-color: #6c7cdd;
-  color: white;
-}
-
-.modal-button.save:hover {
-  background-color: #5a6cd3;
-}
-
-.focus-timer-container {
-  background-color: #ffffff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 20px 24px;
   text-align: center;
-  margin-top: 20px;
 }
 
-.focus-timer-container h2 {
-  color: #6c7cdd;
-  font-size: 2em;
-  margin-bottom: 20px;
+.back-btn {
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f0f0f7;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: background 0.2s;
 }
+
+.back-btn:active { background: #e0e0e7; }
 
 .focus-timer-ring {
   position: relative;
-  width: 200px;
-  height: 200px;
-  margin: 0 auto 30px;
-  border-radius: 50%;
+  width: 240px;
+  height: 240px;
+  margin: 20px 0;
+}
+
+.timer-svg {
+  transform: rotate(-90deg);
+}
+
+.timer-text {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.subtasks-container {
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+  padding-bottom: 20px;
+}
+
+.step-card {
+  background: #f9f9fb;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 10px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: conic-gradient(
-    #6c7cdd var(--progress, 0%),
-    #e0e7ff var(--progress, 0%)
-  );
-  box-shadow: inset 0 0 0 10px white, 0 0 0 10px #e0e7ff; /* Inner and outer ring effect */
+  gap: 12px;
+  text-align: left;
+  transition: all 0.2s;
+  border: 2px solid transparent;
 }
 
-.focus-timer-time {
-  font-size: 3em;
-  font-weight: bold;
-  color: #333;
-  position: relative;
-  z-index: 1;
+.step-card.completed {
+  opacity: 0.6;
+  background: #f0f0f0;
+  text-decoration: line-through;
 }
 
-.focus-timer-task-title {
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #333;
+.step-card.active {
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 4px 12px rgba(108, 124, 221, 0.1);
+}
+
+.step-checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: white;
+}
+
+.step-card.completed .step-checkbox {
+  background: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  height: var(--nav-height);
+  background: white;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-shrink: 0;
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: color 0.2s;
+  flex: 1;
+}
+
+.nav-item.active {
+  color: var(--primary);
+}
+
+.nav-icon {
+  font-size: 1.5rem;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-sheet {
+  background: white;
+  width: 100%;
+  border-radius: 32px 32px 0 0;
+  padding: 32px 24px;
+  max-height: 95vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.input-group {
   margin-bottom: 20px;
 }
 
-.focus-timer-buttons {
+.input-group label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.input-group input, .input-group select {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid #f0f0f0;
+  border-radius: 16px;
+  background: #f9f9f9;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  color: var(--text-main); /* Explicitly set text color to fix white-on-white issue */
+}
+
+.input-group input::placeholder {
+  color: #b0b0b5;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.type-selector {
   display: flex;
-  justify-content: center;
-  gap: 20px;
+  background: #f0f0f7;
+  padding: 4px;
+  border-radius: 14px;
+  margin-bottom: 24px;
 }
 
-.focus-timer-button {
-  padding: 12px 25px;
+.type-btn {
+  flex: 1;
+  padding: 10px;
   border: none;
-  border-radius: 8px;
-  font-size: 1em;
-  font-weight: bold;
+  background: transparent;
+  border-radius: 10px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.2s;
+  color: var(--text-muted);
 }
 
-.focus-timer-button.pause {
-  background-color: #f7b731; /* Yellowish for pause */
+.type-btn.active {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  color: var(--primary);
+}
+
+.duration-chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 8px 16px;
+  background: #f0f0f7;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-main);
+}
+
+.chip.active {
+  background: var(--primary);
   color: white;
 }
 
-.focus-timer-button.pause:hover {
-  background-color: #e6a827;
-}
-
-.focus-timer-button.end {
-  background-color: #e74c3c; /* Red for end */
+.btn-primary {
+  background: var(--primary);
   color: white;
+  border: none;
+  padding: 18px;
+  border-radius: 20px;
+  width: 100%;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
-.focus-timer-button.end:hover {
-  background-color: #c0392b;
-}`,
-    'src/App.jsx': `import React, { useState, useEffect, useRef } from 'react';
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #f0f0f7;
+  color: var(--text-main);
+  border: none;
+  padding: 16px;
+  border-radius: 16px;
+  width: 100%;
+  margin-top: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.controls-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+`,
+    'src/App.jsx': `import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import './App.css';
 
-// Components
-const Header = ({ title, onAddTaskClick }) => (
-  <div className="header-container">
-    <h1 className="header-title">{title}</h1>
-    <button className="add-task-button" onClick={onAddTaskClick}>+ Add Task</button>
-  </div>
-);
-
-const TaskItem = ({ task, onStartTask, isActive, taskColor }) => {
-  const itemStyle = { borderColor: taskColor };
-
-  return (
-    <div 
-      className={\`task-item \${isActive ? 'active' : ''} \${task.isAnytime ? 'anytime' : ''}\`}
-      style={itemStyle}
-      onClick={() => onStartTask(task)}
-    >
-      <span className="task-item-icon">{task.icon}</span>
-      <span className="task-item-time">
-        {task.isAnytime ? 'Anytime' : task.startTime}
-      </span>
-      <span className="task-item-title">{task.title}</span>
-    </div>
-  );
-};
-
-
-const AddTaskModal = ({ isOpen, onClose, onSaveTask }) => {
-  const [title, setTitle] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [duration, setDuration] = useState(30); // Default 30 minutes
-  const [isAnytime, setIsAnytime] = useState(false);
-  const [selectedColor, setSelectedColor] = useState('#6c7cdd'); // Default Tiimo blue
-  const [selectedIcon, setSelectedIcon] = useState('✨'); // Default sparkle icon
-
-  const colors = ['#6c7cdd', '#ffc107', '#28a745', '#fd7e14', '#e83e8c', '#6f42c1', '#20c997', '#007bff'];
-  const icons = [
-    '✨', '📚', '☕', '🛒', '🏃‍♂️', '🧘‍♀️', '🚿', '💻', '🍽️', '😴', 
-    '📞', '💡', '🎵', '🚗', '🏥', '🎉', '✈️', '🐶', '📝', '💪'
-  ];
-
-  useEffect(() => {
-    if (isOpen) {
-      setTitle('');
-      setStartTime('');
-      setDuration(30);
-      setIsAnytime(false);
-      setSelectedColor('#6c7cdd');
-      setSelectedIcon('✨');
-    }
-  }, [isOpen]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-
-    const newTask = {
-      id: uuidv4(),
-      title,
-      startTime: isAnytime ? null : startTime,
-      duration,
-      isAnytime,
-      color: selectedColor,
-      icon: selectedIcon,
-      isCompleted: false,
-    };
-    onSaveTask(newTask);
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h2>Add New Task</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="task-title">Task Title</label>
-            <input
-              id="task-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Study React Hooks"
-              required
-            />
-          </div>
-
-          <div className="checkbox-group">
-            <input
-              id="is-anytime"
-              type="checkbox"
-              checked={isAnytime}
-              onChange={(e) => setIsAnytime(e.target.checked)}
-            />
-            <label htmlFor="is-anytime">Anytime Task</label>
-          </div>
-
-          {!isAnytime && (
-            <div className="form-group">
-              <label htmlFor="start-time">Start Time</label>
-              <input
-                id="start-time"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required={!isAnytime}
-              />
-            </div>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="duration">Duration (minutes)</label>
-            <input
-              id="duration"
-              type="number"
-              min="5"
-              step="5"
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Color</label>
-            <div className="color-picker-grid">
-              {colors.map((color) => (
-                <div
-                  key={color}
-                  className={\`color-swatch \${selectedColor === color ? 'selected' : ''}\`}
-                  style={{ backgroundColor: color }}
-                  onClick={() => setSelectedColor(color)}
-                ></div>
-              ))}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Icon</label>
-            <div className="icon-picker-grid">
-              {icons.map((icon) => (
-                <div
-                  key={icon}
-                  className={\`icon-option \${selectedIcon === icon ? 'selected' : ''}\`}
-                  onClick={() => setSelectedIcon(icon)}
-                >
-                  {icon}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="modal-buttons">
-            <button type="button" className="modal-button cancel" onClick={onClose}>Cancel</button>
-            <button type="submit" className="modal-button save">Save Task</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-const FocusTimer = ({ activeTask, onPauseTimer, onEndTimer }) => {
-  const [timeRemaining, setTimeRemaining] = useState(activeTask.duration * 60); // seconds
-  const [isPaused, setIsPaused] = useState(false);
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    // Initialize time remaining when activeTask changes
-    setTimeRemaining(activeTask.duration * 60);
-    setIsPaused(false);
-    startTimer();
-
-    return () => clearInterval(intervalRef.current);
-  }, [activeTask]);
-
-  const startTimer = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setTimeRemaining((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(intervalRef.current);
-          onEndTimer(); // Automatically end task when timer runs out
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
-  };
-
-  const pauseResumeTimer = () => {
-    if (isPaused) {
-      startTimer();
-    } else {
-      clearInterval(intervalRef.current);
-    }
-    setIsPaused(!isPaused);
-    onPauseTimer(!isPaused); // Notify parent of pause state
-  };
-
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return \`\${minutes < 10 ? '0' : ''}\${minutes}:\${remainingSeconds < 10 ? '0' : ''}\${remainingSeconds}\`;
-  };
-
-  const progress = (activeTask.duration * 60 - timeRemaining) / (activeTask.duration * 60) * 100;
-
-  return (
-    <div className="focus-timer-container">
-      <h2>Focus Time!</h2>
-      <p className="focus-timer-task-title">{activeTask.icon} {activeTask.title}</p>
-      <div className="focus-timer-ring" style={{'--progress': \`\${progress}%\`}}>
-        <span className="focus-timer-time">{formatTime(timeRemaining)}</span>
-      </div>
-      <div className="focus-timer-buttons">
-        <button onClick={pauseResumeTimer} className="focus-timer-button pause">
-          {isPaused ? 'Resume' : 'Pause'}
-        </button>
-        <button onClick={onEndTimer} className="focus-timer-button end">End Task</button>
-      </div>
-    </div>
-  );
-};
-
 const App = () => {
+  const [activeTab, setActiveTab] = useState('today');
   const [tasks, setTasks] = useState(() => {
-    // Load tasks from local storage or use default
-    const savedTasks = localStorage.getItem('tiimo_tasks');
-    return savedTasks ? JSON.parse(savedTasks) : [
-      { id: '1', title: 'Morning Routine', startTime: '08:00', duration: 30, isAnytime: false, color: '#28a745', icon: '🚿', isCompleted: false },
-      { id: '2', title: 'Breakfast', startTime: '08:30', duration: 20, isAnytime: false, color: '#fd7e14', icon: '🍽️', isCompleted: false },
-      { id: '3', title: 'Check Emails', startTime: '09:00', duration: 15, isAnytime: false, color: '#6c7cdd', icon: '💻', isCompleted: false },
-      { id: '4', title: 'Read Book', startTime: null, duration: 45, isAnytime: true, color: '#e83e8c', icon: '📚', isCompleted: false },
-      { id: '5', title: 'Go for a walk', startTime: '15:00', duration: 60, isAnytime: false, color: '#20c997', icon: '🏃‍♂️', isCompleted: false },
+    const saved = localStorage.getItem('tiimo_v3_tasks');
+    return saved ? JSON.parse(saved) : [
+      { id: '1', title: 'Morning Routine', time: '08:00', duration: 30, icon: '🚿', color: '#06d6a0', steps: ['Brush teeth', 'Shower', 'Get dressed'], isAnytime: false },
+      { id: '2', title: 'Deep Work', time: '09:30', duration: 90, icon: '💻', color: '#6c7cdd', steps: ['Check emails', 'Code feature', 'Review PRs'], isAnytime: false },
+      { id: '3', title: 'Read Book', time: null, duration: 20, icon: '📚', color: '#ffd166', steps: ['Find a cozy spot', 'Read 10 pages'], isAnytime: true },
     ];
   });
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [activeTask, setActiveTask] = useState(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('tiimo_tasks', JSON.stringify(tasks));
+    localStorage.setItem('tiimo_v3_tasks', JSON.stringify(tasks));
   }, [tasks]);
 
-  const formattedDate = currentDate.toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
-
-  const handleAddTask = (newTask) => {
-    setTasks((prevTasks) => [...prevTasks, newTask]);
+  const handleAddTask = (task) => {
+    setTasks([...tasks, { ...task, id: uuidv4() }]);
+    setIsAddModalOpen(false);
   };
 
-  const handleStartTask = (task) => {
+  const startTask = (task) => {
     setActiveTask(task);
+    setActiveTab('focus');
   };
 
-  const handlePauseTimer = (isPaused) => {
-    // Logic to handle pause state if needed, e.g., update task status in state
-    console.log(\`Task \${activeTask.title} is \${isPaused ? 'paused' : 'resumed'}\`);
-  };
-
-  const handleEndTimer = () => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === activeTask.id ? { ...task, isCompleted: true } : task
-      )
-    );
+  const completeTask = () => {
+    setTasks(tasks.filter(t => t.id !== activeTask.id));
     setActiveTask(null);
+    setActiveTab('today');
   };
-
-  const scheduledTasks = tasks
-    .filter(task => !task.isAnytime && !task.isCompleted)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
-
-  const anytimeTasks = tasks
-    .filter(task => task.isAnytime && !task.isCompleted);
 
   return (
     <div className="app-container">
-      <Header title={formattedDate} onAddTaskClick={() => setIsModalOpen(true)} />
-
-      {activeTask ? (
-        <FocusTimer
-          activeTask={activeTask}
-          onPauseTimer={handlePauseTimer}
-          onEndTimer={handleEndTimer}
+      {activeTab === 'today' && (
+        <TodayView 
+          tasks={tasks} 
+          onStartTask={startTask} 
+          onAddClick={() => setIsAddModalOpen(true)} 
         />
-      ) : (
-        <main className="timeline-section">
-          {scheduledTasks.length > 0 && (
-            <div className="scheduled-tasks">
-              <h2>Today's Schedule</h2>
-              <div className="task-list">
-                {scheduledTasks.map((task) => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onStartTask={handleStartTask}
-                    isActive={activeTask && activeTask.id === task.id}
-                    taskColor={task.color}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {anytimeTasks.length > 0 && (
-            <div className="anytime-tasks">
-              <h2>Anytime</h2>
-              <div className="task-list">
-                {anytimeTasks.map((task) => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onStartTask={handleStartTask}
-                    isActive={activeTask && activeTask.id === task.id}
-                    taskColor={task.color}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {scheduledTasks.length === 0 && anytimeTasks.length === 0 && (
-            <p style={{ textAlign: 'center', color: '#888' }}>No tasks scheduled. Click '+ Add Task' to get started!</p>
-          )}
-        </main>
+      )}
+      
+      {activeTab === 'todo' && (
+        <TodoView 
+          tasks={tasks.filter(t => t.isAnytime)} 
+          onStartTask={startTask} 
+          onAddClick={() => setIsAddModalOpen(true)}
+        />
       )}
 
-      <AddTaskModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSaveTask={handleAddTask}
+      {activeTab === 'focus' && (
+        <FocusView 
+          task={activeTask} 
+          onEnd={completeTask} 
+          onClose={() => setActiveTab('today')} 
+        />
+      )}
+
+      <BottomNav 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        hasActiveTask={!!activeTask} 
       />
+
+      {isAddModalOpen && (
+        <AddModal 
+          onClose={() => setIsAddModalOpen(false)} 
+          onSave={handleAddTask} 
+        />
+      )}
+    </div>
+  );
+};
+
+const TodayView = ({ tasks, onStartTask, onAddClick }) => {
+  const scheduled = tasks.filter(t => !t.isAnytime).sort((a, b) => a.time.localeCompare(b.time));
+  const anytime = tasks.filter(t => t.isAnytime);
+
+  return (
+    <>
+      <header className="header">
+        <h1>Today</h1>
+        <button className="ai-sparkle-btn" onClick={onAddClick}>✨</button>
+      </header>
+      <main className="content-area">
+        {tasks.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-state-icon">🌈</span>
+            <h3>All clear for today!</h3>
+            <p>Tap the sparkle to add a new task.</p>
+          </div>
+        ) : (
+          <>
+            {scheduled.length > 0 && (
+              <>
+                <div className="section-title">Schedule</div>
+                {scheduled.map(task => (
+                  <TaskCard key={task.id} task={task} onClick={() => onStartTask(task)} />
+                ))}
+              </>
+            )}
+            
+            {anytime.length > 0 && (
+              <>
+                <div className="section-title">Anytime</div>
+                {anytime.map(task => (
+                  <TaskCard key={task.id} task={task} onClick={() => onStartTask(task)} />
+                ))}
+              </>
+            )}
+          </>
+        )}
+      </main>
+    </>
+  );
+};
+
+const TaskCard = ({ task, onClick }) => (
+  <div className="task-card" style={{ borderLeftColor: task.color }} onClick={onClick}>
+    <div className="task-icon">{task.icon}</div>
+    <div className="task-info">
+      <h3>{task.title}</h3>
+      <p>{task.isAnytime ? 'Anytime' : task.time} • {task.duration} min</p>
+    </div>
+    <div style={{ color: '#ccc', fontSize: '1.2rem' }}>→</div>
+  </div>
+);
+
+const FocusView = ({ task, onEnd, onClose }) => {
+  if (!task) return null;
+  
+  const [timeLeft, setTimeLeft] = useState(task.duration * 60);
+  const [isActive, setIsActive] = useState(true);
+  const [completedSteps, setCompletedSteps] = useState([]);
+
+  const radius = 100;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (task.duration * 60 - timeLeft) / (task.duration * 60);
+  const offset = circumference - progress * circumference;
+
+  useEffect(() => {
+    let timer = null;
+    if (isActive && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setIsActive(false);
+    }
+    return () => clearInterval(timer);
+  }, [isActive, timeLeft]);
+
+  const formatTime = (s) => {
+    const m = Math.floor(s / 60);
+    const rs = s % 60;
+    return \`\${m}:\${rs < 10 ? '0' : ''}\${rs}\`;
+  };
+
+  const toggleStep = (index) => {
+    if (completedSteps.includes(index)) {
+      setCompletedSteps(completedSteps.filter(i => i !== index));
+    } else {
+      setCompletedSteps([...completedSteps, index]);
+    }
+  };
+
+  return (
+    <div className="focus-view">
+      <button className="back-btn" onClick={onClose}>✕</button>
+      
+      <h2 style={{ fontSize: '1.6rem', margin: '60px 0 0', fontWeight: 800 }}>{task.icon} {task.title}</h2>
+      
+      <div className="focus-timer-ring">
+        <svg className="timer-svg" width="240" height="240">
+          <circle cx="120" cy="120" r={radius} fill="none" stroke="#f0f0f7" strokeWidth="14" />
+          <circle 
+            cx="120" cy="120" r={radius} fill="none" 
+            stroke={task.color} strokeWidth="14" 
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 1s linear' }}
+          />
+        </svg>
+        <div className="timer-text">{formatTime(timeLeft)}</div>
+      </div>
+
+      <div className="subtasks-container">
+        <div className="section-title">Checklist</div>
+        {task.steps.length > 0 ? task.steps.map((step, i) => (
+          <div 
+            key={i} 
+            className={\`step-card \${completedSteps.includes(i) ? 'completed' : ''} \${!completedSteps.includes(i) && (completedSteps.length === i) ? 'active' : ''}\`}
+            onClick={() => toggleStep(i)}
+          >
+            <div className="step-checkbox">
+              {completedSteps.includes(i) && '✓'}
+            </div>
+            <span style={{ fontWeight: 600 }}>{step}</span>
+          </div>
+        )) : (
+          <p style={{ color: '#aaa', fontStyle: 'italic' }}>No steps defined.</p>
+        )}
+      </div>
+
+      <div className="controls-row">
+        <button 
+          className="btn-secondary" 
+          style={{ flex: 1, marginTop: 0 }} 
+          onClick={() => setIsActive(!isActive)}
+        >
+          {isActive ? 'Pause' : 'Resume'}
+        </button>
+        <button 
+          className="btn-primary" 
+          style={{ flex: 2 }} 
+          onClick={onEnd}
+        >
+          Finish Task
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const TodoView = ({ tasks, onStartTask, onAddClick }) => (
+  <>
+    <header className="header">
+      <h1>To-Do</h1>
+      <button className="ai-sparkle-btn" onClick={onAddClick}>✨</button>
+    </header>
+    <main className="content-area">
+      <p style={{ color: '#888', marginBottom: 24, fontSize: '0.95rem' }}>Your brain dump of unscheduled tasks.</p>
+      {tasks.length === 0 ? (
+        <div className="empty-state">
+          <span className="empty-state-icon">📝</span>
+          <h3>No to-dos yet</h3>
+          <p>Add tasks without a specific time here.</p>
+        </div>
+      ) : (
+        tasks.map(task => (
+          <TaskCard key={task.id} task={task} onClick={() => onStartTask(task)} />
+        ))
+      )}
+    </main>
+  </>
+);
+
+const BottomNav = ({ activeTab, setActiveTab, hasActiveTask }) => (
+  <nav className="bottom-nav">
+    <div className={\`nav-item \${activeTab === 'today' ? 'active' : ''}\`} onClick={() => setActiveTab('today')}>
+      <span className="nav-icon">📅</span>
+      <span>Today</span>
+    </div>
+    <div className={\`nav-item \${activeTab === 'todo' ? 'active' : ''}\`} onClick={() => setActiveTab('todo')}>
+      <span className="nav-icon">📝</span>
+      <span>To-Do</span>
+    </div>
+    <div 
+      className={\`nav-item \${activeTab === 'focus' ? 'active' : ''}\`} 
+      onClick={() => hasActiveTask && setActiveTab('focus')}
+      style={{ opacity: hasActiveTask ? 1 : 0.3 }}
+    >
+      <span className="nav-icon">⏱️</span>
+      <span>Focus</span>
+    </div>
+  </nav>
+);
+
+const AddModal = ({ onClose, onSave }) => {
+  const [title, setTitle] = useState('');
+  const [time, setTime] = useState('09:00');
+  const [duration, setDuration] = useState(30);
+  const [isAnytime, setIsAnytime] = useState(false);
+  const [steps, setSteps] = useState(['']);
+
+  const handleSave = () => {
+    if (!title.trim()) return;
+    onSave({
+      title,
+      time: isAnytime ? null : time,
+      duration: parseInt(duration) || 15,
+      isAnytime,
+      icon: ['🎯', '⚡', '🧘', '🍎', '🎨', '🧹'][Math.floor(Math.random() * 6)],
+      color: ['#6c7cdd', '#06d6a0', '#ffd166', '#ef476f'][Math.floor(Math.random() * 4)],
+      steps: steps.filter(s => s.trim() !== '')
+    });
+  };
+
+  const updateStep = (index, val) => {
+    const newSteps = [...steps];
+    newSteps[index] = val;
+    if (index === steps.length - 1 && val !== '') {
+      newSteps.push('');
+    }
+    setSteps(newSteps);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+        <div className="type-selector">
+          <button 
+            className={\`type-btn \${!isAnytime ? 'active' : ''}\`} 
+            onClick={() => setIsAnytime(false)}
+          >Scheduled</button>
+          <button 
+            className={\`type-btn \${isAnytime ? 'active' : ''}\`} 
+            onClick={() => setIsAnytime(true)}
+          >Anytime</button>
+        </div>
+
+        <div className="input-group">
+          <label>Task Name</label>
+          <input 
+            autoFocus
+            value={title} 
+            onChange={e => setTitle(e.target.value)} 
+            placeholder="e.g. Morning Yoga" 
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: 16 }}>
+          {!isAnytime && (
+            <div className="input-group" style={{ flex: 1 }}>
+              <label>Start Time</label>
+              <input type="time" value={time} onChange={e => setTime(e.target.value)} />
+            </div>
+          )}
+          <div className="input-group" style={{ flex: 1 }}>
+            <label>Duration</label>
+            <input type="number" value={duration} onChange={e => setDuration(e.target.value)} />
+            <div className="duration-chips">
+              {[15, 30, 60].map(d => (
+                <div 
+                  key={d} 
+                  className={\`chip \${duration === d ? 'active' : ''}\`} 
+                  onClick={() => setDuration(d)}
+                >{d}m</div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="input-group">
+          <label>Checklist Steps</label>
+          {steps.map((step, i) => (
+            <input 
+              key={i}
+              value={step}
+              onChange={e => updateStep(i, e.target.value)}
+              placeholder={i === 0 ? "Add a step..." : "Next step..."}
+              style={{ marginBottom: 8 }}
+            />
+          ))}
+        </div>
+
+        <button 
+          className="btn-primary" 
+          onClick={handleSave}
+          disabled={!title.trim()}
+        >
+          Create Task
+        </button>
+        <button className="btn-secondary" onClick={onClose}>Cancel</button>
+      </div>
     </div>
   );
 };
 
 export default App;`,
-    'readme.md': `# Tiimo Task Planner
-A visual task planner and focus timer inspired by Tiimo. 
+    'readme.md': `# Tiimo-Style Planner
+
+A beautiful, focus-oriented task planner inspired by Tiimo. 
 
 ## Features
-- Schedule tasks for specific times
-- Create "Anytime" tasks
-- Visual focus timer with progress ring
-- Custom icons and colors for each task
-- Data persistence via LocalStorage`
+- **Visual Day Timeline**: See your day at a glance.
+- **Focus Timer**: Immersive timer with visual progress ring.
+- **Smart Tasks**: Support for scheduled and "anytime" tasks.
+- **Checklists**: Break tasks down into smaller steps.
+- **Data Persistence**: Uses LocalStorage to save your tasks.`
+  };
+
+  const defaultFiles = {
+    'src/App.css': `body {
+  font-family: 'Inter', sans-serif;
+  padding: 40px;
+  text-align: center;
+  background: #f0f2f5;
+  color: #333;
+}
+.wrapper {
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+h1 { color: #6c7cdd; margin-bottom: 20px; }
+p { line-height: 1.6; color: #666; }`,
+    'src/App.jsx': `import React from 'react';
+import './App.css';
+
+const App = () => {
+  return (
+    <div className="wrapper">
+      <h1>✨ New Project</h1>
+      <p>This is a blank slate. Use the AI Builder to describe what you want to create!</p>
+    </div>
+  );
+};
+
+export default App;`,
+    'readme.md': '# New Project\n\nStart building something amazing!'
   };
 
   // Load from localStorage or use default
@@ -830,7 +962,8 @@ A visual task planner and focus timer inspired by Tiimo.
 
     // Migrate from old single-app format if it exists
     const savedOld = localStorage.getItem('vfs_files');
-    let initialFiles = defaultFiles;
+    // If no saved projects, we initialize with Tiimo files for the very first experience
+    let initialFiles = tiimoFiles;
     if (savedOld) {
       try {
         initialFiles = JSON.parse(savedOld);
