@@ -5,6 +5,7 @@ import * as ReactDOMModule from 'react-dom';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import FileExplorer from './FileExplorer';
 import { bundle } from './utils/bundler';
+import ProjectDashboard from './ProjectDashboard';
 
 // Expose React globally for the bundled code to find
 window.React = ReactModule;
@@ -376,17 +377,56 @@ The application will launch in a new window.
   };
 
   // Load from localStorage or use default
-  const [files, setFiles] = useState(() => {
-    const saved = localStorage.getItem('vfs_files');
+  const [projects, setProjects] = useState(() => {
+    const saved = localStorage.getItem('vfs_projects');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {
-        console.error("Failed to parse saved files", e);
+        console.error("Failed to parse saved projects", e);
       }
     }
-    return defaultFiles;
+
+    // Migrate from old single-app format if it exists
+    const savedOld = localStorage.getItem('vfs_files');
+    let initialFiles = defaultFiles;
+    if (savedOld) {
+      try {
+        initialFiles = JSON.parse(savedOld);
+      } catch (e) { }
+    }
+
+    return [{
+      id: 'default',
+      name: 'My First App',
+      files: initialFiles,
+      lastModified: Date.now()
+    }];
   });
+
+  const [currentProjectId, setCurrentProjectId] = useState(() => {
+    return localStorage.getItem('vfs_current_project_id') || projects[0].id;
+  });
+
+  const [view, setView] = useState('dashboard'); // 'dashboard' or 'editor'
+
+  // Get current project and files
+  const currentProject = projects.find(p => p.id === currentProjectId) || projects[0];
+  const files = currentProject.files;
+
+  // Optimized setFiles that updates the specific project
+  const setFiles = useCallback((newFilesOrUpdater) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id === currentProjectId) {
+        const nextFiles = typeof newFilesOrUpdater === 'function'
+          ? newFilesOrUpdater(p.files)
+          : newFilesOrUpdater;
+        return { ...p, files: nextFiles, lastModified: Date.now() };
+      }
+      return p;
+    }));
+  }, [currentProjectId]);
 
   const [activeFile, setActiveFile] = useState('src/App.jsx');
   const [prompt, setPrompt] = useState('');
@@ -397,8 +437,9 @@ The application will launch in a new window.
 
   // Save to localStorage
   useEffect(() => {
-    localStorage.setItem('vfs_files', JSON.stringify(files));
-  }, [files]);
+    localStorage.setItem('vfs_projects', JSON.stringify(projects));
+    localStorage.setItem('vfs_current_project_id', currentProjectId);
+  }, [projects, currentProjectId]);
 
   // Debounce files update to prevent excessive bundling
   const [debouncedFiles, setDebouncedFiles] = useState(files);
@@ -558,10 +599,56 @@ The application will launch in a new window.
 
   const handleReset = () => {
     if (confirm('Are you sure you want to reset the project? All changes will be lost.')) {
-      localStorage.removeItem('vfs_files');
       setFiles(defaultFiles);
       setActiveFile('src/App.jsx');
     }
+  };
+
+  const handleCreateProject = (name) => {
+    const newProject = {
+      id: Date.now().toString(),
+      name: name,
+      files: { ...defaultFiles },
+      lastModified: Date.now()
+    };
+    setProjects(prev => [...prev, newProject]);
+    setCurrentProjectId(newProject.id);
+    setView('editor');
+  };
+
+  const handleDeleteProject = (id) => {
+    if (projects.length <= 1) {
+      alert("You must have at least one app.");
+      return;
+    }
+    const newProjects = projects.filter(p => p.id !== id);
+    setProjects(newProjects);
+    if (currentProjectId === id) {
+      setCurrentProjectId(newProjects[0].id);
+    }
+  };
+
+  const handleSelectProject = (id) => {
+    setCurrentProjectId(id);
+    setView('editor');
+  };
+
+  const handleCloneProject = (id) => {
+    const parent = projects.find(p => p.id === id);
+    if (!parent) return;
+    const newProject = {
+      ...parent,
+      id: Date.now().toString(),
+      name: `${parent.name} (Copy)`,
+      lastModified: Date.now()
+    };
+    setProjects(prev => [...prev, newProject]);
+    setCurrentProjectId(newProject.id);
+    setView('editor');
+  };
+
+  const handleRenameProject = (id, newName) => {
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
   };
 
   // Runtime Component to execute the bundled code
@@ -696,316 +783,359 @@ The application will launch in a new window.
       background: 'linear-gradient(135deg, #0a0e27 0%, #141b2d 50%, #1a0a27 100%)'
     }}>
 
-      {/* Desktop Toolbar (Hidden on Mobile) */}
-      <div className="hide-on-mobile" style={{
-        padding: '16px 24px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: 'rgba(20, 27, 45, 0.8)',
-        backdropFilter: 'blur(20px)',
-        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)'
-      }}>
-        <h2 style={{
-          margin: 0,
-          fontSize: '1.4rem',
-          fontWeight: 800,
-          background: 'linear-gradient(135deg, #667eea, #764ba2)',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          letterSpacing: '-0.02em'
-        }}>✨ Ultra IDE</h2>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            onClick={handleReset}
-            style={{
-              padding: '8px 16px',
-              background: 'linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2))',
-              border: '1px solid rgba(231, 76, 60, 0.3)',
-              cursor: 'pointer',
-              borderRadius: '8px',
-              color: '#ff6b6b',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              transition: 'all 0.25s',
-              backdropFilter: 'blur(10px)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
-              e.target.style.color = 'white';
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 8px 16px rgba(231, 76, 60, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2))';
-              e.target.style.color = '#ff6b6b';
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = 'none';
-            }}
-          >🔄 Reset</button>
-          {['editor', 'split', 'preview'].map(mode => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              style={{
-                padding: '8px 16px',
-                background: viewMode === mode
-                  ? 'linear-gradient(135deg, #667eea, #764ba2)'
-                  : 'rgba(255, 255, 255, 0.05)',
-                border: viewMode === mode
-                  ? '1px solid rgba(102, 126, 234, 0.5)'
-                  : '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                color: viewMode === mode ? 'white' : '#b8c5d6',
-                fontWeight: viewMode === mode ? 600 : 500,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                transition: 'all 0.25s',
-                textTransform: 'capitalize'
-              }}
-              onMouseEnter={(e) => {
-                if (viewMode !== mode) {
-                  e.target.style.background = 'rgba(102, 126, 234, 0.2)';
-                  e.target.style.borderColor = 'rgba(102, 126, 234, 0.4)';
-                  e.target.style.color = 'white';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (viewMode !== mode) {
-                  e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                  e.target.style.color = '#b8c5d6';
-                }
-              }}
-            >{mode}</button>
-          ))}
-        </div>
-      </div>
-
-      {/* Mobile Header */}
-      <div className="show-on-mobile" style={{
-        padding: '12px 16px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: 'rgba(20, 27, 45, 0.9)',
-        backdropFilter: 'blur(20px)'
-      }}>
-        <h2 style={{
-          margin: 0,
-          fontSize: '1.2rem',
-          fontWeight: 800,
-          background: 'linear-gradient(135deg, #667eea, #764ba2)',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}>Ultra IDE</h2>
-        <button
-          onClick={handleReset}
-          style={{
-            padding: '6px 12px',
-            background: 'rgba(231, 76, 60, 0.2)',
-            border: 'none',
-            borderRadius: '6px',
-            color: '#ff6b6b',
-            fontSize: '0.8rem'
-          }}
-        >🔄</button>
-      </div>
-
-      {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
-
-        {/* Desktop View */}
-        <div className="hide-on-mobile" style={{ width: '100%', height: '100%', display: 'flex' }}>
-          {/* Editor Area */}
-          {(viewMode === 'split' || viewMode === 'editor') && (
-            <div style={{ flex: 1, display: 'flex', borderRight: viewMode === 'split' ? '1px solid #ccc' : 'none' }}>
-
-              {/* File Explorer */}
-              <FileExplorer
-                files={files}
-                selectedFile={activeFile}
-                onFileSelect={setActiveFile}
-                onFileCreate={handleFileCreate}
-                onFileDelete={handleFileDelete}
-              />
-
-              {/* Code Editor */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                {/* AI Input Section */}
-                <div style={{
-                  padding: '16px',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(20, 27, 45, 0.6)',
+      {view === 'dashboard' ? (
+        <ProjectDashboard
+          projects={projects}
+          currentProjectId={currentProjectId}
+          onSelectProject={handleSelectProject}
+          onCreateProject={handleCreateProject}
+          onDeleteProject={handleDeleteProject}
+          onCloneProject={handleCloneProject}
+          onRenameProject={handleRenameProject}
+        />
+      ) : (
+        <>
+          {/* Desktop Toolbar (Hidden on Mobile) */}
+          <div className="hide-on-mobile" style={{
+            padding: '16px 24px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'rgba(20, 27, 45, 0.8)',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)'
+          }}>
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+              <button
+                onClick={() => setView('dashboard')}
+                style={{
+                  padding: '8px 16px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  color: '#b8c5d6',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s'
+                }}
+              >🏠 Apps</button>
+              <h2 style={{
+                margin: 0,
+                fontSize: '1.4rem',
+                fontWeight: 800,
+                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                letterSpacing: '-0.02em'
+              }}>✨ {currentProject.name}</h2>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button
+                onClick={handleReset}
+                style={{
+                  padding: '8px 16px',
+                  background: 'linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2))',
+                  border: '1px solid rgba(231, 76, 60, 0.3)',
+                  cursor: 'pointer',
+                  borderRadius: '8px',
+                  color: '#ff6b6b',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  transition: 'all 0.25s',
                   backdropFilter: 'blur(10px)'
-                }}>
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="✨ Ask AI to transform your code..."
-                    style={{
-                      width: '100%',
-                      height: '70px',
-                      padding: '12px',
-                      boxSizing: 'border-box',
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '0.9rem',
-                      background: 'rgba(10, 14, 39, 0.6)',
-                      border: '1px solid rgba(102, 126, 234, 0.3)',
-                      borderRadius: '8px',
-                      color: 'white',
-                      resize: 'none',
-                      transition: 'all 0.25s'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#667eea';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.2), 0 0 20px rgba(102, 126, 234, 0.3)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(102, 126, 234, 0.3)';
-                      e.target.style.boxShadow = 'none';
-                    }}
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+                  e.target.style.color = 'white';
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 8px 16px rgba(231, 76, 60, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2))';
+                  e.target.style.color = '#ff6b6b';
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = 'none';
+                }}
+              >🔄 Reset</button>
+              {['editor', 'split', 'preview'].map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  style={{
+                    padding: '8px 16px',
+                    background: viewMode === mode
+                      ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                      : 'rgba(255, 255, 255, 0.05)',
+                    border: viewMode === mode
+                      ? '1px solid rgba(102, 126, 234, 0.5)'
+                      : '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '8px',
+                    color: viewMode === mode ? 'white' : '#b8c5d6',
+                    fontWeight: viewMode === mode ? 600 : 500,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s',
+                    textTransform: 'capitalize'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (viewMode !== mode) {
+                      e.target.style.background = 'rgba(102, 126, 234, 0.2)';
+                      e.target.style.borderColor = 'rgba(102, 126, 234, 0.4)';
+                      e.target.style.color = 'white';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (viewMode !== mode) {
+                      e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.target.style.color = '#b8c5d6';
+                    }
+                  }}
+                >{mode}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile Header */}
+          <div className="show-on-mobile" style={{
+            padding: '12px 16px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'rgba(20, 27, 45, 0.9)',
+            backdropFilter: 'blur(20px)'
+          }}>
+            <h2 style={{
+              margin: 0,
+              fontSize: '1.2rem',
+              fontWeight: 800,
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>Ultra IDE</h2>
+            <button
+              onClick={handleReset}
+              style={{
+                padding: '6px 12px',
+                background: 'rgba(231, 76, 60, 0.2)',
+                border: 'none',
+                borderRadius: '6px',
+                color: '#ff6b6b',
+                fontSize: '0.8rem'
+              }}
+            >🔄</button>
+          </div>
+
+          {/* Main Content Area */}
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+
+            {/* Desktop View */}
+            <div className="hide-on-mobile" style={{ width: '100%', height: '100%', display: 'flex' }}>
+              {/* Editor Area */}
+              {(viewMode === 'split' || viewMode === 'editor') && (
+                <div style={{ flex: 1, display: 'flex', borderRight: viewMode === 'split' ? '1px solid #ccc' : 'none' }}>
+
+                  {/* File Explorer */}
+                  <FileExplorer
+                    files={files}
+                    selectedFile={activeFile}
+                    onFileSelect={setActiveFile}
+                    onFileCreate={handleFileCreate}
+                    onFileDelete={handleFileDelete}
                   />
-                  <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px', gap: '12px' }}>
-                    <button
-                      onClick={handleGenerate}
-                      disabled={loading}
+
+                  {/* Code Editor */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    {/* AI Input Section */}
+                    <div style={{
+                      padding: '16px',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(20, 27, 45, 0.6)',
+                      backdropFilter: 'blur(10px)'
+                    }}>
+                      <textarea
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="✨ Ask AI to transform your code..."
+                        style={{
+                          width: '100%',
+                          height: '70px',
+                          padding: '12px',
+                          boxSizing: 'border-box',
+                          fontFamily: 'Inter, sans-serif',
+                          fontSize: '0.9rem',
+                          background: 'rgba(10, 14, 39, 0.6)',
+                          border: '1px solid rgba(102, 126, 234, 0.3)',
+                          borderRadius: '8px',
+                          color: 'white',
+                          resize: 'none',
+                          transition: 'all 0.25s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#667eea';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.2), 0 0 20px rgba(102, 126, 234, 0.3)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = 'rgba(102, 126, 234, 0.3)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px', gap: '12px' }}>
+                        <button
+                          onClick={handleGenerate}
+                          disabled={loading}
+                          style={{
+                            padding: '10px 20px',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            background: loading
+                              ? 'rgba(102, 126, 234, 0.5)'
+                              : 'linear-gradient(135deg, #667eea, #764ba2)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            color: 'white',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            transition: 'all 0.25s',
+                            boxShadow: loading ? 'none' : '0 4px 12px rgba(102, 126, 234, 0.4)',
+                            opacity: loading ? 0.7 : 1
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!loading) {
+                              e.target.style.transform = 'translateY(-2px)';
+                              e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!loading) {
+                              e.target.style.transform = 'translateY(0)';
+                              e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                            }
+                          }}
+                        >
+                          {loading ? '⚡ Generating...' : '🚀 Generate'}
+                        </button>
+                        {status && (
+                          <span style={{
+                            fontSize: '0.85rem',
+                            color: status.includes('Error') ? '#ff6b6b' : '#4facfe',
+                            fontWeight: 500
+                          }}>
+                            {status}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Code Editor */}
+                    <textarea
+                      value={files[activeFile] || ''}
+                      onChange={(e) => handleFileChange(e.target.value)}
                       style={{
-                        padding: '10px 20px',
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        background: loading
-                          ? 'rgba(102, 126, 234, 0.5)'
-                          : 'linear-gradient(135deg, #667eea, #764ba2)',
-                        border: 'none',
-                        borderRadius: '8px',
-                        color: 'white',
-                        fontWeight: 600,
+                        flex: 1,
+                        width: '100%',
+                        fontFamily: '"Fira Code", "Consolas", monospace',
                         fontSize: '0.9rem',
-                        transition: 'all 0.25s',
-                        boxShadow: loading ? 'none' : '0 4px 12px rgba(102, 126, 234, 0.4)',
-                        opacity: loading ? 0.7 : 1
+                        lineHeight: '1.6',
+                        padding: '16px',
+                        background: '#0d1117',
+                        color: '#e6edf3',
+                        resize: 'none',
+                        border: 'none',
+                        outline: 'none',
+                        caretColor: '#667eea'
                       }}
-                      onMouseEnter={(e) => {
-                        if (!loading) {
-                          e.target.style.transform = 'translateY(-2px)';
-                          e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!loading) {
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
-                        }
-                      }}
-                    >
-                      {loading ? '⚡ Generating...' : '🚀 Generate'}
-                    </button>
-                    {status && (
-                      <span style={{
-                        fontSize: '0.85rem',
-                        color: status.includes('Error') ? '#ff6b6b' : '#4facfe',
-                        fontWeight: 500
-                      }}>
-                        {status}
-                      </span>
-                    )}
+                    />
                   </div>
                 </div>
-
-                {/* Code Editor */}
-                <textarea
-                  value={files[activeFile] || ''}
-                  onChange={(e) => handleFileChange(e.target.value)}
-                  style={{
-                    flex: 1,
-                    width: '100%',
-                    fontFamily: '"Fira Code", "Consolas", monospace',
-                    fontSize: '0.9rem',
-                    lineHeight: '1.6',
-                    padding: '16px',
-                    background: '#0d1117',
-                    color: '#e6edf3',
-                    resize: 'none',
-                    border: 'none',
-                    outline: 'none',
-                    caretColor: '#667eea'
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Preview Panel */}
-          {(viewMode === 'split' || viewMode === 'preview') && (
-            <div style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              background: 'linear-gradient(135deg, #0a0e27 0%, #141b2d 100%)',
-              borderLeft: viewMode === 'split' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
-            }}>
-              {viewMode === 'split' && (
-                <div style={{
-                  padding: '16px',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(20, 27, 45, 0.6)',
-                  backdropFilter: 'blur(10px)',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  color: '#b8c5d6',
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase'
-                }}>▶️ Live Preview</div>
               )}
-              <div style={{
-                flex: 1,
-                overflow: 'auto',
-                padding: viewMode === 'split' ? '20px' : '0',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-                <RuntimeApp />
-              </div>
+
+              {/* Preview Panel */}
+              {(viewMode === 'split' || viewMode === 'preview') && (
+                <div style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  background: 'linear-gradient(135deg, #0a0e27 0%, #141b2d 100%)',
+                  borderLeft: viewMode === 'split' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+                }}>
+                  {viewMode === 'split' && (
+                    <div style={{
+                      padding: '16px',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(20, 27, 45, 0.6)',
+                      backdropFilter: 'blur(10px)',
+                      fontWeight: 600,
+                      fontSize: '0.9rem',
+                      color: '#b8c5d6',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase'
+                    }}>▶️ Live Preview</div>
+                  )}
+                  <div style={{
+                    flex: 1,
+                    overflow: 'auto',
+                    padding: viewMode === 'split' ? '20px' : '0',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}>
+                    <RuntimeApp />
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Mobile View Content */}
-        <div className="show-on-mobile" style={{ width: '100%', height: '100%' }}>
-          {renderMobileContent()}
-        </div>
+            {/* Mobile View Content */}
+            <div className="show-on-mobile" style={{ width: '100%', height: '100%' }}>
+              {renderMobileContent()}
+            </div>
+          </div>
+        </>
+      )}
 
-      </div>
-
-      {/* Mobile Bottom Navigation */}
-      <div className="mobile-nav-bar">
+      {/* Global Mobile Navigation (Visible in both views) */}
+      <div className="show-on-mobile mobile-nav-bar">
         <button
-          className={`mobile-nav-item ${mobileTab === 'files' ? 'active' : ''}`}
-          onClick={() => setMobileTab('files')}
+          className={`mobile-nav-item ${view === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setView('dashboard')}
         >
-          <span style={{ fontSize: '1.5rem' }}>📂</span>
+          <span style={{ fontSize: '1.5rem' }}>🏠</span>
+          <span>Apps</span>
+        </button>
+        <button
+          className={`mobile-nav-item ${view === 'editor' && mobileTab === 'files' ? 'active' : ''}`}
+          onClick={() => { setView('editor'); setMobileTab('files'); }}
+        >
+          <span style={{ fontSize: '1.5rem' }}>�</span>
           <span>Files</span>
         </button>
         <button
-          className={`mobile-nav-item ${mobileTab === 'code' ? 'active' : ''}`}
-          onClick={() => setMobileTab('code')}
+          className={`mobile-nav-item ${view === 'editor' && mobileTab === 'code' ? 'active' : ''}`}
+          onClick={() => { setView('editor'); setMobileTab('code'); }}
         >
           <span style={{ fontSize: '1.5rem' }}>📝</span>
           <span>Code</span>
         </button>
         <button
-          className={`mobile-nav-item ${mobileTab === 'preview' ? 'active' : ''}`}
-          onClick={() => setMobileTab('preview')}
+          className={`mobile-nav-item ${view === 'editor' && mobileTab === 'preview' ? 'active' : ''}`}
+          onClick={() => { setView('editor'); setMobileTab('preview'); }}
         >
           <span style={{ fontSize: '1.5rem' }}>▶️</span>
           <span>Run</span>
         </button>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };
