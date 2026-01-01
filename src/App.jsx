@@ -802,13 +802,16 @@ A visual task planner and focus timer inspired by Tiimo.
   const [status, setStatus] = useState('');
   const [viewMode, setViewMode] = useState('split');
   const [bundledCode, setBundledCode] = useState('');
-  const [experienceMode, setExperienceMode] = useState('simple'); // 'simple' or 'expert'
+  const [experienceMode, setExperienceMode] = useState(() => localStorage.getItem('vfs_experience_mode') || 'simple'); // 'simple' or 'expert'
+  const [mobileTab, setMobileTab] = useState(() => localStorage.getItem('vfs_mobile_tab') || 'build'); // 'build', 'files', 'code'
 
   // Save to localStorage
   useEffect(() => {
     localStorage.setItem('vfs_projects', JSON.stringify(projects));
     localStorage.setItem('vfs_current_project_id', currentProjectId);
-  }, [projects, currentProjectId]);
+    localStorage.setItem('vfs_experience_mode', experienceMode);
+    localStorage.setItem('vfs_mobile_tab', mobileTab);
+  }, [projects, currentProjectId, experienceMode, mobileTab]);
 
   // Debounce files update to prevent excessive bundling
   const [debouncedFiles, setDebouncedFiles] = useState(files);
@@ -889,7 +892,7 @@ A visual task planner and focus timer inspired by Tiimo.
 
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash-exp",
         generationConfig: {
           maxOutputTokens: 8192,
         }
@@ -1042,8 +1045,6 @@ A visual task planner and focus timer inspired by Tiimo.
     }
   }, [bundledCode]);
 
-  // Mobile specific state
-  const [mobileTab, setMobileTab] = useState('build'); // 'build', 'files', 'code'
 
   const renderMobileContent = () => {
     if (mobileTab === 'files') {
@@ -1075,32 +1076,34 @@ A visual task planner and focus timer inspired by Tiimo.
     }
     if (mobileTab === 'build') {
       return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: 'white', position: 'relative' }}>
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            <RuntimeApp />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: '#F9FAFB', position: 'relative' }}>
+          <div style={{ flex: 1, overflow: 'auto', padding: '10px' }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '20px',
+              minHeight: '100%',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.05)',
+              overflow: 'hidden'
+            }}>
+              <RuntimeApp />
+            </div>
           </div>
 
-          <div style={{
-            padding: '12px',
-            background: 'rgba(10, 14, 39, 0.95)',
-            borderTop: '1px solid rgba(102, 126, 234, 0.3)',
-            backdropFilter: 'blur(10px)',
-            marginBottom: '60px'
-          }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="mobile-chat-container">
+            <div className="mobile-chat-inner">
               <input
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Ask AI to change anything..."
-                style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(102, 126, 234, 0.3)', borderRadius: '10px', color: 'white' }}
+                placeholder="Describe changes..."
+                style={{ flex: 1, padding: '14px 18px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '25px', color: 'white', fontSize: '1rem', outline: 'none' }}
               />
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                style={{ width: '50px', height: '45px', borderRadius: '10px', background: 'var(--gradient-primary)', border: 'none', color: 'white', fontSize: '1.2rem' }}
-              >{loading ? '⏳' : '🚀'}</button>
+                className="mobile-chat-send"
+              >{loading ? '⚡' : '🚀'}</button>
             </div>
-            {status && <div style={{ fontSize: '0.7rem', color: '#4facfe', marginTop: '4px' }}>{status}</div>}
+            {status && <div className="mobile-status-pill">{status}</div>}
           </div>
         </div>
       );
@@ -1140,7 +1143,8 @@ A visual task planner and focus timer inspired by Tiimo.
             alignItems: 'center',
             background: 'rgba(20, 27, 45, 0.8)',
             backdropFilter: 'blur(20px)',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)'
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)',
+            zIndex: 100
           }}>
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
               <button
@@ -1192,26 +1196,21 @@ A visual task planner and focus timer inspired by Tiimo.
                 onClick={handleReset}
                 style={{
                   padding: '8px 16px',
-                  background: 'linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2))',
-                  border: '1px solid rgba(231, 76, 60, 0.3)',
-                  cursor: 'pointer',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
-                  color: '#ff6b6b',
+                  color: '#b8c5d6',
                   fontWeight: 600,
                   fontSize: '0.85rem',
-                  transition: 'all 0.25s',
-                  backdropFilter: 'blur(10px)'
+                  cursor: 'pointer',
+                  transition: 'all 0.25s'
                 }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
-                  e.target.style.color = 'white';
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 8px 16px rgba(231, 76, 60, 0.4)';
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#667eea';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.2), 0 0 20px rgba(102, 126, 234, 0.3)';
                 }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2))';
-                  e.target.style.color = '#ff6b6b';
-                  e.target.style.transform = 'translateY(0)';
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(102, 126, 234, 0.3)';
                   e.target.style.boxShadow = 'none';
                 }}
               >🔄 Reset</button>
@@ -1272,37 +1271,38 @@ A visual task planner and focus timer inspired by Tiimo.
             </div>
           </div>
 
-          {/* Mobile Header */}
-          <div className="show-on-mobile" style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            background: 'rgba(20, 27, 45, 0.9)',
-            backdropFilter: 'blur(20px)'
-          }}>
-            <h2 style={{
-              margin: 0,
-              fontSize: '1.2rem',
-              fontWeight: 800,
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>Ultra IDE</h2>
-            <button
-              onClick={handleReset}
-              style={{
-                padding: '6px 12px',
-                background: 'rgba(231, 76, 60, 0.2)',
-                border: 'none',
-                borderRadius: '6px',
-                color: '#ff6b6b',
-                fontSize: '0.8rem'
-              }}
-            >🔄</button>
-          </div>
+          {/* Mobile Header (Visible only on Mobile Editor View) */}
+          {view === 'editor' && (
+            <div className="show-on-mobile mobile-editor-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  onClick={() => setView('dashboard')}
+                  style={{ background: 'none', border: 'none', color: '#b8c5d6', fontSize: '1.2rem', padding: '5px' }}
+                >◀</button>
+                <div style={{
+                  width: '30px', height: '30px', borderRadius: '6px', background: 'var(--gradient-primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', overflow: 'hidden'
+                }}>
+                  {currentProject.logo?.startsWith('http') || currentProject.logo?.startsWith('data:') ? (
+                    <img src={currentProject.logo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="logo" />
+                  ) : (
+                    currentProject.logo || currentProject.name[0].toUpperCase()
+                  )}
+                </div>
+                <span style={{ fontWeight: 700, fontSize: '1rem', color: 'white' }}>{currentProject.name}</span>
+              </div>
+
+              <button
+                onClick={() => setExperienceMode(prev => prev === 'simple' ? 'expert' : 'simple')}
+                style={{
+                  background: experienceMode === 'expert' ? 'var(--gradient-accent)' : 'rgba(255,255,255,0.1)',
+                  border: 'none', borderRadius: '20px', padding: '5px 12px', fontSize: '0.7rem', color: 'white', fontWeight: 600
+                }}
+              >
+                {experienceMode === 'expert' ? 'EXPERT' : 'SIMPLE'}
+              </button>
+            </div>
+          )}
 
           {/* Main Content Area */}
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
@@ -1408,7 +1408,8 @@ A visual task planner and focus timer inspired by Tiimo.
                 </div>
               )}
 
-              {/* Preview Panel (Always visible in Simple Mode, optional in Expert) */}
+
+              {/* Preview Panel  */}
               {(experienceMode === 'simple' || (experienceMode === 'expert' && (viewMode === 'split' || viewMode === 'preview'))) && (
                 <div style={{
                   flex: 1,
@@ -1429,7 +1430,7 @@ A visual task planner and focus timer inspired by Tiimo.
                     alignItems: 'center'
                   }}>
                     <div style={{
-                      width: experienceMode === 'simple' ? '100%' : '100%',
+                      width: '100%',
                       maxWidth: experienceMode === 'simple' ? '1200px' : 'none',
                       height: '100%',
                       background: 'white',
@@ -1445,12 +1446,13 @@ A visual task planner and focus timer inspired by Tiimo.
             </div>
 
             {/* Mobile View Content */}
-            <div className="show-on-mobile" style={{ width: '100%', height: '100%' }}>
+            <div className="show-on-mobile" style={{ width: '100%', height: 'calc(100% - 110px)', overflow: 'hidden' }}>
               {renderMobileContent()}
             </div>
           </div>
         </>
-      )}
+      )
+      }
 
       {/* Global Mobile Navigation (Visible in both views) */}
       <div className="show-on-mobile mobile-nav-bar">
@@ -1458,14 +1460,14 @@ A visual task planner and focus timer inspired by Tiimo.
           className={`mobile-nav-item ${view === 'dashboard' ? 'active' : ''}`}
           onClick={() => setView('dashboard')}
         >
-          <span style={{ fontSize: '1.5rem' }}>🏠</span>
+          <span style={{ fontSize: '1.4rem' }}>🍱</span>
           <span>Apps</span>
         </button>
         <button
           className={`mobile-nav-item ${view === 'editor' && mobileTab === 'build' ? 'active' : ''}`}
           onClick={() => { setView('editor'); setMobileTab('build'); }}
         >
-          <span style={{ fontSize: '1.5rem' }}>✨</span>
+          <span style={{ fontSize: '1.4rem' }}>✨</span>
           <span>Build</span>
         </button>
         {experienceMode === 'expert' && (
@@ -1474,14 +1476,14 @@ A visual task planner and focus timer inspired by Tiimo.
               className={`mobile-nav-item ${view === 'editor' && mobileTab === 'files' ? 'active' : ''}`}
               onClick={() => { setView('editor'); setMobileTab('files'); }}
             >
-              <span style={{ fontSize: '1.5rem' }}>📁</span>
+              <span style={{ fontSize: '1.4rem' }}>📁</span>
               <span>Files</span>
             </button>
             <button
               className={`mobile-nav-item ${view === 'editor' && mobileTab === 'code' ? 'active' : ''}`}
               onClick={() => { setView('editor'); setMobileTab('code'); }}
             >
-              <span style={{ fontSize: '1.5rem' }}>📝</span>
+              <span style={{ fontSize: '1.4rem' }}>📝</span>
               <span>Code</span>
             </button>
           </>
@@ -1489,6 +1491,63 @@ A visual task planner and focus timer inspired by Tiimo.
       </div>
 
       <style>{`
+        .mobile-editor-header {
+           padding: 12px 16px;
+           background: rgba(20, 27, 45, 0.9);
+           backdrop-filter: blur(20px);
+           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           z-index: 100;
+        }
+        .mobile-chat-container {
+           position: fixed;
+           bottom: 70px;
+           left: 0;
+           width: 100%;
+           padding: 15px;
+           z-index: 200;
+           pointer-events: none;
+        }
+        .mobile-chat-inner {
+           display: flex;
+           gap: 10px;
+           background: rgba(20, 27, 45, 0.9);
+           backdrop-filter: blur(20px);
+           padding: 8px;
+           border-radius: 35px;
+           border: 1px solid rgba(102, 126, 234, 0.4);
+           box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+           pointer-events: auto;
+           max-width: 500px;
+           margin: 0 auto;
+        }
+        .mobile-chat-send {
+           width: 44px;
+           height: 44px;
+           border-radius: 50%;
+           background: var(--gradient-primary);
+           border: none;
+           color: white;
+           font-size: 1.2rem;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           flex-shrink: 0;
+           box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .mobile-status-pill {
+           margin: 10px auto;
+           padding: 4px 12px;
+           background: rgba(79, 172, 254, 0.2);
+           border-radius: 20px;
+           font-size: 0.7rem;
+           color: #4facfe;
+           text-align: center;
+           width: fit-content;
+           pointer-events: none;
+        }
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
