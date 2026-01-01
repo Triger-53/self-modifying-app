@@ -867,9 +867,10 @@ A visual task planner and focus timer inspired by Tiimo.
 
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.5-flash", // Use a stable flash model
         generationConfig: {
           maxOutputTokens: 8192,
+          temperature: 0.2, // Lower temperature for more reliable JSON
         }
       });
 
@@ -885,15 +886,17 @@ A visual task planner and focus timer inspired by Tiimo.
       ${prompt}
       
       OUTPUT FORMAT:
-      Return ONLY a JSON object. No markdown.
+      Return ONLY a JSON object. No markdown, no explanation.
+      If a file doesn't need changes, DO NOT include it in the "files" object.
+      
       {
         "files": {
-          "filename": "full content"
+          "path/to/modified_file.jsx": "FULL updated content of the file"
         },
-        "deletedFiles": ["filename"]
+        "deletedFiles": ["path/to/deleted_file.js"]
       }
       
-      CRITICAL: Ensure the JSON is complete and not truncated.`;
+      CRITICAL: Ensure the JSON is complete and valid. Do not truncate the code.`;
 
       const result = await model.generateContent(fullPrompt);
       const response = result.response;
