@@ -1153,9 +1153,11 @@ export default App;`,
 
       const genAI = new GoogleGenerativeAI(apiKey);
 
+      const selectedModel = thinkingLevel === 'ultrafast' || thinkingLevel === 'ultrafast' ? "gemini-2.0-flash-lite-preview-02-05" : "gemini-3-flash-preview";
+
       // Use System Instructions for better reliability
       const model = genAI.getGenerativeModel({
-        model: "gemini-3-flash-preview",
+        model: selectedModel,
         systemInstruction: `You are an expert React developer. 
         You modify a Virtual File System (VFS) based on user requests.
         
@@ -1190,6 +1192,7 @@ export default App;`,
       });
 
       const THINKING_CONFIGS = {
+        ultrafast: { temperature: 1.0, topP: 0.95, topK: 40 }, // High config for fast/loose model
         minimal: { temperature: 0.1, topP: 0.8, topK: 10 },
         low: { temperature: 0.3, topP: 0.9, topK: 25 },
         medium: { temperature: 0.6, topP: 0.95, topK: 45 },
@@ -1433,7 +1436,8 @@ export default App;`,
                 { id: 'minimal', icon: '⚡' },
                 { id: 'low', icon: '🧠' },
                 { id: 'medium', icon: '🧬' },
-                { id: 'high', icon: '🔮' }
+                { id: 'high', icon: '🔮' },
+                { id: 'ultrafast', icon: '🚀' }
               ].map(level => (
                 <button
                   key={level.id}
@@ -1768,7 +1772,8 @@ export default App;`,
                         { id: 'minimal', label: 'Min', icon: '⚡' },
                         { id: 'low', label: 'Low', icon: '🧠' },
                         { id: 'medium', label: 'Med', icon: '🧬' },
-                        { id: 'high', label: 'High', icon: '🔮' }
+                        { id: 'high', label: 'Higher', icon: '🔮' },
+                        { id: 'ultrafast', label: 'Ultra', icon: '🚀' }
                       ].map(level => (
                         <button
                           key={level.id}
