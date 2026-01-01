@@ -478,29 +478,34 @@ The application will launch in a new window.
       if (!apiKey) throw new Error('API Key missing');
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-3-flash",
+        generationConfig: {
+          maxOutputTokens: 8192,
+        }
+      });
 
-      const fullPrompt = `You are an expert React developer acting as an autonomous agent.
+      const fullPrompt = `You are an expert React developer. 
       
-      Current Files:
-      ${JSON.stringify(files, null, 2)}
+      OBJECTIVE:
+      Respond to the user request by modifying the provided file system.
       
-      User Request: ${prompt}
+      CURRENT FILES:
+      ${JSON.stringify(files)}
       
-      Instructions:
-      1. You can modify existing files, create new files, or delete files to fulfill the request.
-      2. Return a JSON object with the following structure:
+      REQUEST:
+      ${prompt}
+      
+      OUTPUT FORMAT:
+      Return ONLY a JSON object. No markdown.
       {
         "files": {
-          "src/App.jsx": "full new content",
-          "src/NewComponent.jsx": "content"
+          "filename": "full content"
         },
-        "deletedFiles": ["src/Unused.jsx"]
+        "deletedFiles": ["filename"]
       }
-      3. "files" object contains files to create or update. Keys are filenames, values are the FULL content.
-      4. "deletedFiles" array contains filenames to delete.
-      5. Ensure all code is complete, functional, and uses correct imports.
-      6. ONLY return the JSON object. No markdown formatting.`;
+      
+      CRITICAL: Ensure the JSON is complete and not truncated.`;
 
       const result = await model.generateContent(fullPrompt);
       const response = result.response;

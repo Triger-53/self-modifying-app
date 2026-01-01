@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">UltraIDE</string>
+    <string name="title_activity_main">UltraIDE</string>
+    <string name="package_name">com.ultraide.app</string>
+    <string name="custom_url_scheme">com.ultraide.app</string>
+</resources>
