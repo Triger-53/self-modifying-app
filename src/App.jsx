@@ -9,6 +9,80 @@ import ProjectDashboard from './ProjectDashboard';
 window.React = ReactModule;
 window.ReactDOM = ReactDOMModule;
 
+function ReferenceAppModal({ isOpen, onClose, referenceData, onSave }) {
+  const [url, setUrl] = useState(referenceData.url || '');
+  const [description, setDescription] = useState(referenceData.description || '');
+
+  useEffect(() => {
+    if (isOpen) {
+      setUrl(referenceData.url || '');
+      setDescription(referenceData.description || '');
+    }
+  }, [isOpen, referenceData]);
+
+  const handleSave = () => {
+    onSave({ url, description });
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 2000 }}>
+      <div className="modal-content" style={{ background: '#1a1f35', color: 'white', border: '1px solid rgba(102, 126, 234, 0.3)', maxWidth: '500px' }}>
+        <h2 style={{ color: 'white', marginBottom: '10px' }}>Reference App</h2>
+        <p style={{ color: '#b8c5d6', fontSize: '0.9rem', marginBottom: '20px' }}>
+          Provide details about an existing app you'd like the AI to use as a reference.
+        </p>
+
+        <div className="form-group" style={{ marginBottom: '15px' }}>
+          <label style={{ color: '#b8c5d6', display: 'block', marginBottom: '8px', fontWeight: 600 }}>App URL (optional)</label>
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://example.com"
+            style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+          />
+        </div>
+
+        <div className="form-group">
+          <label style={{ color: '#b8c5d6', display: 'block', marginBottom: '8px', fontWeight: 600 }}>Description / Features to Copy</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe the styling, components, or functionality you want to reference..."
+            style={{
+              width: '100%',
+              minHeight: '120px',
+              padding: '12px',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              color: 'white',
+              resize: 'vertical',
+              fontFamily: 'inherit'
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ padding: '10px 20px', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', color: '#b8c5d6', cursor: 'pointer', fontWeight: 600 }}
+          >Cancel</button>
+          <button
+            type="button"
+            onClick={handleSave}
+            style={{ padding: '10px 20px', background: 'var(--gradient-primary)', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', fontWeight: 600 }}
+          >Save Reference</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const App = () => {
   // Initial default files
   const defaultFiles = {
@@ -416,79 +490,6 @@ const TaskItem = ({ task, onStartTask, isActive, taskColor }) => {
   );
 };
 
-const ReferenceAppModal = ({ isOpen, onClose, referenceData, onSave }) => {
-  const [url, setUrl] = useState(referenceData.url || '');
-  const [description, setDescription] = useState(referenceData.description || '');
-
-  useEffect(() => {
-    if (isOpen) {
-      setUrl(referenceData.url || '');
-      setDescription(referenceData.description || '');
-    }
-  }, [isOpen, referenceData]);
-
-  const handleSave = () => {
-    onSave({ url, description });
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-overlay" style={{ zIndex: 2000 }}>
-      <div className="modal-content" style={{ background: '#1a1f35', color: 'white', border: '1px solid rgba(102, 126, 234, 0.3)', maxWidth: '500px' }}>
-        <h2 style={{ color: 'white', marginBottom: '10px' }}>Reference App</h2>
-        <p style={{ color: '#b8c5d6', fontSize: '0.9rem', marginBottom: '20px' }}>
-          Provide details about an existing app you'd like the AI to use as a reference.
-        </p>
-        
-        <div className="form-group" style={{ marginBottom: '15px' }}>
-          <label style={{ color: '#b8c5d6', display: 'block', marginBottom: '8px', fontWeight: 600 }}>App URL (optional)</label>
-          <input
-            type="text"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://example.com"
-            style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
-          />
-        </div>
-
-        <div className="form-group">
-          <label style={{ color: '#b8c5d6', display: 'block', marginBottom: '8px', fontWeight: 600 }}>Description / Features to Copy</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe the styling, components, or functionality you want to reference..."
-            style={{ 
-              width: '100%', 
-              minHeight: '120px', 
-              padding: '12px', 
-              background: 'rgba(255,255,255,0.05)', 
-              border: '1px solid rgba(255,255,255,0.1)', 
-              borderRadius: '8px', 
-              color: 'white',
-              resize: 'vertical',
-              fontFamily: 'inherit'
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-          <button 
-            type="button" 
-            onClick={onClose} 
-            style={{ padding: '10px 20px', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', color: '#b8c5d6', cursor: 'pointer', fontWeight: 600 }}
-          >Cancel</button>
-          <button 
-            type="button" 
-            onClick={handleSave} 
-            style={{ padding: '10px 20px', background: 'var(--gradient-primary)', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', fontWeight: 600 }}
-          >Save Reference</button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const AddTaskModal = ({ isOpen, onClose, onSaveTask }) => {
   const [title, setTitle] = useState('');
@@ -1161,13 +1162,13 @@ A visual task planner and focus timer inspired by Tiimo.
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Describe changes..."
-                style={{ flex: 1, padding: '14px 18px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '25px', color: 'white', fontSize: '1rem', outline: 'none' }}
+                style={{ flex: 1, minWidth: 0, padding: '10px 12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '25px', color: 'white', fontSize: '0.9rem', outline: 'none' }}
               />
               <button
                 onClick={() => setIsReferenceModalOpen(true)}
                 style={{
-                  width: '44px',
-                  height: '44px',
+                  width: '40px',
+                  height: '40px',
                   borderRadius: '50%',
                   background: (referenceApp.url || referenceApp.description) ? 'rgba(79, 172, 254, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(102, 126, 234, 0.3)',
@@ -1176,7 +1177,8 @@ A visual task planner and focus timer inspired by Tiimo.
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  flexShrink: 0
                 }}
               >🔗</button>
               <button
@@ -1515,27 +1517,27 @@ A visual task planner and focus timer inspired by Tiimo.
            bottom: 70px;
            left: 0;
            width: 100%;
-           padding: 15px;
+            padding: 10px 12px;
            z-index: 200;
            pointer-events: none;
         }
         .mobile-chat-inner {
            display: flex;
            align-items: center;
-           gap: 10px;
+            gap: 8px;
            background: rgba(20, 27, 45, 0.9);
            backdrop-filter: blur(20px);
-           padding: 8px;
+            padding: 6px 8px;
            border-radius: 35px;
-           border: 1px solid rgba(102, 126, 234, 0.4);
+            border: 1px solid rgba(102, 126, 234, 0.3);
            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
            pointer-events: auto;
            max-width: 500px;
            margin: 0 auto;
         }
         .mobile-chat-send {
-           width: 44px;
-           height: 44px;
+           width: 40px;
+           height: 40px;
            border-radius: 50%;
            background: var(--gradient-primary);
            border: none;
