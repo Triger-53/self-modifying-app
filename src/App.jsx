@@ -1001,15 +1001,25 @@ A visual task planner and focus timer inspired by Tiimo.
     if (!bundledCode || !bundledCode.code) return null;
     try {
       // We wrap the bundle to return the export of the entry point
-      console.log('Bundled Code:', bundledCode.code);
       const wrappedCode = bundledCode.code + '\nreturn require("src/App.jsx").default;';
 
       const func = new Function('window', 'Promise', 'console', 'setTimeout', 'setInterval', 'externalModules', wrappedCode);
       const Component = func(window, Promise, console, setTimeout, setInterval, bundledCode.externalModules);
 
-      return Component ? <Component /> : <div>No default export from App.jsx</div>;
+      return Component ? (
+        <div className="runtime-preview">
+          <Component />
+        </div>
+      ) : (
+        <div style={{ padding: '20px', color: '#666' }}>No default export from App.jsx</div>
+      );
     } catch (err) {
-      return <div style={{ color: 'red' }}><pre>{err.message}</pre></div>;
+      return (
+        <div style={{ color: '#ff4d4d', padding: '20px', background: '#fff' }}>
+          <h3>Runtime Error</h3>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.9rem' }}>{err.message}</pre>
+        </div>
+      );
     }
   }, [bundledCode]);
 
@@ -1017,12 +1027,12 @@ A visual task planner and focus timer inspired by Tiimo.
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: '#F9FAFB', position: 'relative' }}>
         <div style={{ flex: 1, overflow: 'auto', padding: '10px' }}>
-          <div style={{
+          <div className="runtime-preview-container" style={{
             background: 'white',
             borderRadius: '20px',
             minHeight: '100%',
             boxShadow: '0 10px 40px rgba(0,0,0,0.05)',
-            overflow: 'hidden'
+            overflow: 'auto'
           }}>
             <RuntimeApp />
           </div>
@@ -1265,14 +1275,16 @@ A visual task planner and focus timer inspired by Tiimo.
                   justifyContent: 'center',
                   alignItems: 'center'
                 }}>
-                  <div style={{
+                  <div className="runtime-preview-container" style={{
                     width: '100%',
                     maxWidth: '1200px',
                     height: '100%',
                     background: 'white',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
                     borderRadius: '20px',
-                    overflow: 'hidden'
+                    overflow: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column'
                   }}>
                     <RuntimeApp />
                   </div>
@@ -1367,6 +1379,32 @@ A visual task planner and focus timer inspired by Tiimo.
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Virtual App Scoping & Alignment Fixes */
+        .runtime-preview {
+          width: 100%;
+          min-height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+          transform-origin: top center;
+        }
+
+        .runtime-preview-container {
+          position: relative;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0,0,0,0.2) transparent;
+        }
+
+        .runtime-preview-container::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .runtime-preview-container::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.1);
+          border-radius: 10px;
         }
       `}</style>
     </div>

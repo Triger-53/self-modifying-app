@@ -157,14 +157,25 @@ export const bundle = async (files) => {
 
     for (const [filename, content] of Object.entries(files)) {
         if (filename.endsWith('.css')) {
+            // Scope body and html tags to prevent leakage to the host app
+            // and fix style tag duplication by using unique IDs
+            const scopedCss = content
+                .replace(/body\b/g, '.runtime-preview')
+                .replace(/html\b/g, '.runtime-preview-root');
+
             modules.push({
                 name: filename,
                 code: `
-             const style = document.createElement('style');
-             style.textContent = ${JSON.stringify(content)};
-             document.head.appendChild(style);
-             module.exports = {};
-           `
+              const styleId = "vfs-style-${filename.replace(/[^a-z0-9]/gi, '-')}";
+              let style = document.getElementById(styleId);
+              if (!style) {
+                  style = document.createElement('style');
+                  style.id = styleId;
+                  document.head.appendChild(style);
+              }
+              style.textContent = ${JSON.stringify(scopedCss)};
+              module.exports = {};
+            `
             });
             continue;
         }
