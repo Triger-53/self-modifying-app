@@ -6,6 +6,7 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
     const [editingProjectId, setEditingProjectId] = useState(null);
     const [editName, setEditName] = useState('');
     const [logoPickerId, setLogoPickerId] = useState(null);
+    const [viewFilesProjectId, setViewFilesProjectId] = useState(null);
 
     const handleCreate = () => {
         if (newProjectName.trim()) {
@@ -62,6 +63,30 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                     </div>
                 )}
 
+                {viewFilesProjectId && (
+                    <div className="modal-overlay" onClick={() => setViewFilesProjectId(null)}>
+                        <div className="modal-container glass" onClick={e => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h3>{projects.find(p => p.id === viewFilesProjectId)?.name} Files</h3>
+                                <button onClick={() => setViewFilesProjectId(null)} className="btn-close-modal">✕</button>
+                            </div>
+                            <div className="file-list">
+                                {Object.keys(projects.find(p => p.id === viewFilesProjectId)?.files || {}).sort().map(path => (
+                                    <div key={path} className="file-row">
+                                        <span className="file-icon">📄</span>
+                                        <div className="file-details">
+                                            <span className="file-path">{path}</span>
+                                            <span className="file-meta">
+                                                {projects.find(p => p.id === viewFilesProjectId)?.files[path].length.toLocaleString()} chars
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="project-grid">
                     {projects.map(project => (
                         <div
@@ -85,14 +110,6 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                                     <div className="logo-edit-hint">EDIT</div>
                                 </div>
                                 <div className="project-actions">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onCloneProject(project.id);
-                                        }}
-                                        title="Clone"
-                                        className="btn-action clone"
-                                    >👯</button>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -163,6 +180,17 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                                 <span className="file-count">
                                     {Object.keys(project.files).length} Files
                                 </span>
+
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setViewFilesProjectId(project.id);
+                                    }}
+                                    className="btn-files"
+                                    title="View Files"
+                                >
+                                    📂
+                                </button>
 
                                 <button
                                     onClick={(e) => {
@@ -319,6 +347,41 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                     from { opacity: 0; transform: translateY(10px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
+
+                .modal-overlay {
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+                    display: flex; justify-content: center; align-items: center; z-index: 1000;
+                    padding: 20px;
+                }
+                .modal-container {
+                    width: 100%; max-width: 500px; max-height: 80vh;
+                    background: #1a2332; border-radius: 20px; border: 1px solid rgba(102, 126, 234, 0.3);
+                    display: flex; flex-direction: column; overflow: hidden;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                }
+                .modal-header {
+                    padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+                    display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);
+                }
+                .modal-header h3 { margin: 0; color: white; }
+                .btn-close-modal { background: none; border: none; color: #b8c5d6; font-size: 1.2rem; cursor: pointer; }
+                .file-list { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+                .file-row {
+                    display: flex; align-items: center; gap: 12px; padding: 10px;
+                    background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);
+                }
+                .file-icon { font-size: 1.2rem; }
+                .file-details { display: flex; flex-direction: column; }
+                .file-path { color: #e0e7ff; font-size: 0.9rem; font-family: monospace; }
+                .file-meta { color: #6b7a8f; font-size: 0.75rem; }
+                .btn-files {
+                    background: transparent; border: 1px solid rgba(102, 126, 234, 0.3);
+                    border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+                    color: #b8c5d6; cursor: pointer; margin-left: auto; margin-right: 10px;
+                    font-size: 0.9rem; transition: all 0.2s;
+                }
+                .btn-files:hover { background: rgba(102, 126, 234, 0.2); color: white; transform: scale(1.1); }
             `}</style>
         </div>
     );
