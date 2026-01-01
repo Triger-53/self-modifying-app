@@ -7,6 +7,7 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
     const [editName, setEditName] = useState('');
     const [logoPickerId, setLogoPickerId] = useState(null);
     const [viewFilesProjectId, setViewFilesProjectId] = useState(null);
+    const [editingFile, setEditingFile] = useState(null); // { projectId, path, content }
 
     const handleCreate = () => {
         if (newProjectName.trim()) {
@@ -64,25 +65,89 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                 )}
 
                 {viewFilesProjectId && (
-                    <div className="modal-overlay" onClick={() => setViewFilesProjectId(null)}>
-                        <div className="modal-container glass" onClick={e => e.stopPropagation()}>
-                            <div className="modal-header">
-                                <h3>{projects.find(p => p.id === viewFilesProjectId)?.name} Files</h3>
-                                <button onClick={() => setViewFilesProjectId(null)} className="btn-close-modal">✕</button>
-                            </div>
-                            <div className="file-list">
-                                {Object.keys(projects.find(p => p.id === viewFilesProjectId)?.files || {}).sort().map(path => (
-                                    <div key={path} className="file-row">
-                                        <span className="file-icon">📄</span>
-                                        <div className="file-details">
-                                            <span className="file-path">{path}</span>
-                                            <span className="file-meta">
-                                                {projects.find(p => p.id === viewFilesProjectId)?.files[path].length.toLocaleString()} chars
-                                            </span>
+                    <div className="modal-overlay" onClick={() => {
+                        setViewFilesProjectId(null);
+                        setEditingFile(null);
+                    }}>
+                        <div
+                            className={`modal-container glass ${editingFile ? 'editing-mode' : ''}`}
+                            onClick={e => e.stopPropagation()}
+                            style={{ maxWidth: editingFile ? '800px' : '500px', height: editingFile ? '80vh' : 'auto' }}
+                        >
+                            {!editingFile ? (
+                                <>
+                                    <div className="modal-header">
+                                        <h3>{projects.find(p => p.id === viewFilesProjectId)?.name} Files</h3>
+                                        <button onClick={() => setViewFilesProjectId(null)} className="btn-close-modal">✕</button>
+                                    </div>
+                                    <div className="file-list">
+                                        {Object.keys(projects.find(p => p.id === viewFilesProjectId)?.files || {}).sort().map(path => (
+                                            <div
+                                                key={path}
+                                                className="file-row"
+                                                onClick={() => {
+                                                    const project = projects.find(p => p.id === viewFilesProjectId);
+                                                    setEditingFile({
+                                                        projectId: project.id,
+                                                        path: path,
+                                                        content: project.files[path]
+                                                    });
+                                                }}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                <span className="file-icon">📄</span>
+                                                <div className="file-details">
+                                                    <span className="file-path">{path}</span>
+                                                    <span className="file-meta">
+                                                        {projects.find(p => p.id === viewFilesProjectId)?.files[path].length.toLocaleString()} chars
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <div className="modal-header">
+                                        <h3>Editing {editingFile.path}</h3>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            <button
+                                                onClick={() => setEditingFile(null)}
+                                                className="btn-secondary"
+                                                style={{ padding: '5px 10px', fontSize: '0.9rem' }}
+                                            >Cancel</button>
+                                            <button
+                                                onClick={() => {
+                                                    // We need a prop to handle file updates, currently assuming we modify local state only or passed prop
+                                                    // Adding a hypothetical callback usage here for completeness, though user didn't explicitly ask for save logic yet, 
+                                                    // but implied "open" usually means read/maybe write. 
+                                                    // Since we don't have a direct 'onUpdateFile' prop, we'll just close for now or need to lift state.
+                                                    // EDIT: To make this functional immediately without massive refactor, I'll assume readonly or just viewing for now as requested "i want o open the files to noting else" -> "nothing else" implies just viewing?
+                                                    // Wait, "nothing else" might mean "just open, don't run it".
+                                                    // Let's stick to VIEWING primarily.
+                                                    setEditingFile(null);
+                                                }}
+                                                className="btn-primary"
+                                                style={{ padding: '5px 10px', fontSize: '0.9rem' }}
+                                            >Done</button>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                    <pre style={{
+                                        flex: 1,
+                                        overflow: 'auto',
+                                        padding: '15px',
+                                        margin: 0,
+                                        background: 'rgba(0,0,0,0.3)',
+                                        color: '#e0e7ff',
+                                        fontFamily: 'monospace',
+                                        fontSize: '0.9rem',
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-all'
+                                    }}>
+                                        {editingFile.content}
+                                    </pre>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
