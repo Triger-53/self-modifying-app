@@ -867,44 +867,45 @@ A visual task planner and focus timer inspired by Tiimo.
 
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash", // Use a stable flash model
+        model: "gemini-1.5-flash", // Revert to a stable model
         generationConfig: {
           maxOutputTokens: 8192,
-          temperature: 0.2, // Lower temperature for more reliable JSON
+          temperature: 0.1, // Ensure maximum stability
         }
       });
 
-      const fullPrompt = `You are an expert React developer. 
-      
-      OBJECTIVE:
-      Respond to the user request by modifying the provided file system.
-      
-      CURRENT FILES:
-      ${JSON.stringify(files)}
-      
-      REQUEST:
-      ${prompt}
-      
-      OUTPUT FORMAT:
-      Return ONLY a JSON object. No markdown, no explanation.
-      If a file doesn't need changes, DO NOT include it in the "files" object.
-      
-      {
-        "files": {
-          "path/to/modified_file.jsx": "FULL updated content of the file"
-        },
-        "deletedFiles": ["path/to/deleted_file.js"]
-      }
-      
-      CRITICAL: Ensure the JSON is complete and valid. Do not truncate the code.`;
+      const fullPrompt = `Expert React Dev. 
+Modify the VFS based on prompt.
+
+CURRENT VFS:
+${JSON.stringify(files)}
+
+PROMPT:
+${prompt}
+
+OUTPUT:
+JSON ONLY. No talk. ONLY include changed files.
+
+{
+  "files": { "path/to/file": "content" },
+  "deletedFiles": ["path"]
+}`;
 
       const result = await model.generateContent(fullPrompt);
       const response = result.response;
-      const text = response.text();
+      let text = response.text().trim();
 
-      // Robust JSON extraction: Find the first '{' and the last '}'
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      const cleanJson = jsonMatch ? jsonMatch[0] : text;
+      // Robust JSON extraction
+      let cleanJson = text;
+      const firstCurly = text.indexOf('{');
+      const lastCurly = text.lastIndexOf('}');
+      if (firstCurly !== -1 && lastCurly !== -1 && lastCurly > firstCurly) {
+        cleanJson = text.substring(firstCurly, lastCurly + 1);
+      } else if (firstCurly !== -1 && lastCurly === -1) {
+        // Detected truncation: AI started a JSON but never finished. 
+        // We can't safely parse this, but we'll try to find the last valid block.
+        throw new Error("AI response was truncated. Try a smaller request.");
+      }
 
       try {
         const changes = JSON.parse(cleanJson);
