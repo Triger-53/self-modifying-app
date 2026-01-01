@@ -1208,12 +1208,12 @@ export default App;`,
     }
   };
 
-  const handleCreateProject = (name) => {
+  const handleCreateProject = (name, useDemoTemplate = false) => {
     const newProject = {
       id: Date.now().toString(),
       name: name,
-      logo: '✨',
-      files: { ...defaultFiles },
+      logo: useDemoTemplate ? '📅' : '✨',
+      files: useDemoTemplate ? { ...tiimoFiles } : { ...defaultFiles },
       lastModified: Date.now()
     };
     setProjects(prev => [...prev, newProject]);

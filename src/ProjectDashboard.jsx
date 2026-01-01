@@ -8,11 +8,13 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
     const [logoPickerId, setLogoPickerId] = useState(null);
     const [viewFilesProjectId, setViewFilesProjectId] = useState(null);
     const [editingFile, setEditingFile] = useState(null); // { projectId, path, content }
+    const [useDemoTemplate, setUseDemoTemplate] = useState(false);
 
     const handleCreate = () => {
         if (newProjectName.trim()) {
-            onCreateProject(newProjectName.trim());
+            onCreateProject(newProjectName.trim(), useDemoTemplate);
             setNewProjectName('');
+            setUseDemoTemplate(false);
             setIsCreating(false);
         }
     };
@@ -57,6 +59,18 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                             }}
                             className="create-input"
                         />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
+                            <input
+                                type="checkbox"
+                                id="demo-template"
+                                checked={useDemoTemplate}
+                                onChange={(e) => setUseDemoTemplate(e.target.checked)}
+                                style={{ width: '18px', height: '18px', accentColor: '#667eea' }}
+                            />
+                            <label htmlFor="demo-template" style={{ color: '#b8c5d6', fontSize: '0.95rem', cursor: 'pointer' }}>
+                                Start with Demo App (Tiimo Planner)
+                            </label>
+                        </div>
                         <div className="create-actions">
                             <button onClick={handleCreate} className="btn-primary">Create</button>
                             <button onClick={() => setIsCreating(false)} className="btn-secondary">Cancel</button>
