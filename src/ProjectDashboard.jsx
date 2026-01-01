@@ -205,7 +205,7 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                     margin-bottom: 40px;
                 }
                 .header-title {
-                        fontSize: 2.5rem;
+                        font-size: 2.5rem;
                         background: linear-gradient(135deg, #667eea, #764ba2);
                         -webkit-background-clip: text;
                         background-clip: text;
@@ -270,7 +270,7 @@ const ProjectDashboard = ({ projects, currentProjectId, onSelectProject, onCreat
                 .project-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
                 .project-logo {
                     width: 60px; height: 60px; border-radius: 16px; background: var(--gradient-primary);
-                    display: flex; align-items: center; justify-content: center; fontSize: 1.8rem;
+                    display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
                     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden;
                 }
                 .logo-edit-hint { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.5); font-size: 0.5rem; text-align: center; opacity: 0; transition: 0.2s; }

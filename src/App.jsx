@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import * as Babel from '@babel/standalone';
+import React, { useState, useEffect, useCallback } from 'react';
 import * as ReactModule from 'react';
 import * as ReactDOMModule from 'react-dom';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import FileExplorer from './FileExplorer';
 import { bundle } from './utils/bundler';
 import ProjectDashboard from './ProjectDashboard';
 
@@ -15,18 +13,18 @@ const App = () => {
   // Initial default files
   const defaultFiles = {
     'src/App.css': `/* General styles for the Tiimo-like app */
-body {
-  font-family: 'Arial', sans-serif;
-  background-color: #f0f2f5; /* Light grey background */
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start; /* Align to top, not center */
-  min-height: 100vh;
-  color: #333;
-  overflow-y: auto;
-}
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f2f5; /* Light grey background */
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start; /* Align to top, not center */
+      min-height: 100vh;
+      color: #333;
+      overflow-y: auto;
+  }
 
 .app-container {
   background-color: #ffffff; /* White card background */
@@ -796,22 +794,16 @@ A visual task planner and focus timer inspired by Tiimo.
     }));
   }, [currentProjectId]);
 
-  const [activeFile, setActiveFile] = useState('src/App.jsx');
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
-  const [viewMode, setViewMode] = useState('split');
   const [bundledCode, setBundledCode] = useState('');
-  const [experienceMode, setExperienceMode] = useState(() => localStorage.getItem('vfs_experience_mode') || 'simple'); // 'simple' or 'expert'
-  const [mobileTab, setMobileTab] = useState(() => localStorage.getItem('vfs_mobile_tab') || 'build'); // 'build', 'files', 'code'
 
   // Save to localStorage
   useEffect(() => {
     localStorage.setItem('vfs_projects', JSON.stringify(projects));
     localStorage.setItem('vfs_current_project_id', currentProjectId);
-    localStorage.setItem('vfs_experience_mode', experienceMode);
-    localStorage.setItem('vfs_mobile_tab', mobileTab);
-  }, [projects, currentProjectId, experienceMode, mobileTab]);
+  }, [projects, currentProjectId]);
 
   // Debounce files update to prevent excessive bundling
   const [debouncedFiles, setDebouncedFiles] = useState(files);
@@ -858,26 +850,9 @@ A visual task planner and focus timer inspired by Tiimo.
     runBundle();
   }, [debouncedFiles]);
 
-  const handleFileChange = (newContent) => {
-    setFiles(prev => ({ ...prev, [activeFile]: newContent }));
-  };
-
-  const handleFileCreate = (name) => {
-    // Simple validation
-    let fileName = name;
-    if (!fileName.startsWith('src/')) fileName = 'src/' + fileName;
-    if (!files[fileName]) {
-      setFiles(prev => ({ ...prev, [fileName]: `import React from 'react';\n\nexport default () => <div>${fileName}</div>;` }));
-      setActiveFile(fileName);
-    }
-  };
-
-  const handleFileDelete = (name) => {
-    const newFiles = { ...files };
-    delete newFiles[name];
-    setFiles(newFiles);
-    if (activeFile === name) {
-      setActiveFile(Object.keys(newFiles)[0] || '');
+  const handleReset = () => {
+    if (confirm('Are you sure you want to reset the project? All changes will be lost.')) {
+      setFiles(defaultFiles);
     }
   };
 
@@ -969,13 +944,6 @@ A visual task planner and focus timer inspired by Tiimo.
     }
   };
 
-  const handleReset = () => {
-    if (confirm('Are you sure you want to reset the project? All changes will be lost.')) {
-      setFiles(defaultFiles);
-      setActiveFile('src/App.jsx');
-    }
-  };
-
   const handleCreateProject = (name) => {
     const newProject = {
       id: Date.now().toString(),
@@ -1045,69 +1013,39 @@ A visual task planner and focus timer inspired by Tiimo.
     }
   }, [bundledCode]);
 
-
   const renderMobileContent = () => {
-    if (mobileTab === 'files') {
-      return (
-        <FileExplorer
-          files={files}
-          selectedFile={activeFile}
-          onFileSelect={(file) => {
-            setActiveFile(file);
-            setMobileTab('code');
-          }}
-          onFileCreate={handleFileCreate}
-          onFileDelete={handleFileDelete}
-        />
-      );
-    }
-    if (mobileTab === 'code') {
-      return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: '#0d1117' }}>
-          <textarea
-            value={files[activeFile] || ''}
-            onChange={(e) => handleFileChange(e.target.value)}
-            style={{
-              flex: 1, width: '100%', fontFamily: 'monospace', fontSize: '0.9rem', padding: '16px', background: 'transparent', color: '#e6edf3', border: 'none', resize: 'none'
-            }}
-          />
-        </div>
-      );
-    }
-    if (mobileTab === 'build') {
-      return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: '#F9FAFB', position: 'relative' }}>
-          <div style={{ flex: 1, overflow: 'auto', padding: '10px' }}>
-            <div style={{
-              background: 'white',
-              borderRadius: '20px',
-              minHeight: '100%',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.05)',
-              overflow: 'hidden'
-            }}>
-              <RuntimeApp />
-            </div>
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', background: '#F9FAFB', position: 'relative' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: '10px' }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '20px',
+            minHeight: '100%',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.05)',
+            overflow: 'hidden'
+          }}>
+            <RuntimeApp />
           </div>
+        </div>
 
-          <div className="mobile-chat-container">
-            <div className="mobile-chat-inner">
-              <input
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe changes..."
-                style={{ flex: 1, padding: '14px 18px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '25px', color: 'white', fontSize: '1rem', outline: 'none' }}
-              />
-              <button
-                onClick={handleGenerate}
-                disabled={loading}
-                className="mobile-chat-send"
-              >{loading ? '⚡' : '🚀'}</button>
-            </div>
-            {status && <div className="mobile-status-pill">{status}</div>}
+        <div className="mobile-chat-container">
+          <div className="mobile-chat-inner">
+            <input
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Describe changes..."
+              style={{ flex: 1, padding: '14px 18px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '25px', color: 'white', fontSize: '1rem', outline: 'none' }}
+            />
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="mobile-chat-send"
+            >{loading ? '⚡' : '🚀'}</button>
           </div>
+          {status && <div className="mobile-status-pill">{status}</div>}
         </div>
-      );
-    }
+      </div>
+    );
   };
 
   return (
@@ -1214,60 +1152,6 @@ A visual task planner and focus timer inspired by Tiimo.
                   e.target.style.boxShadow = 'none';
                 }}
               >🔄 Reset</button>
-              <button
-                onClick={() => setExperienceMode(prev => prev === 'simple' ? 'expert' : 'simple')}
-                style={{
-                  padding: '8px 16px',
-                  background: experienceMode === 'expert'
-                    ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-                    : 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s'
-                }}
-              >
-                {experienceMode === 'expert' ? '🛠️ Expert Mode' : '✨ Simple Mode'}
-              </button>
-              {experienceMode === 'expert' && ['editor', 'split', 'preview'].map(mode => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  style={{
-                    padding: '8px 16px',
-                    background: viewMode === mode
-                      ? 'linear-gradient(135deg, #667eea, #764ba2)'
-                      : 'rgba(255, 255, 255, 0.05)',
-                    border: viewMode === mode
-                      ? '1px solid rgba(102, 126, 234, 0.5)'
-                      : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px',
-                    color: viewMode === mode ? 'white' : '#b8c5d6',
-                    fontWeight: viewMode === mode ? 600 : 500,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.25s',
-                    textTransform: 'capitalize'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (viewMode !== mode) {
-                      e.target.style.background = 'rgba(102, 126, 234, 0.2)';
-                      e.target.style.borderColor = 'rgba(102, 126, 234, 0.4)';
-                      e.target.style.color = 'white';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (viewMode !== mode) {
-                      e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                      e.target.style.color = '#b8c5d6';
-                    }
-                  }}
-                >{mode}</button>
-              ))}
             </div>
           </div>
 
@@ -1291,16 +1175,6 @@ A visual task planner and focus timer inspired by Tiimo.
                 </div>
                 <span style={{ fontWeight: 700, fontSize: '1rem', color: 'white' }}>{currentProject.name}</span>
               </div>
-
-              <button
-                onClick={() => setExperienceMode(prev => prev === 'simple' ? 'expert' : 'simple')}
-                style={{
-                  background: experienceMode === 'expert' ? 'var(--gradient-accent)' : 'rgba(255,255,255,0.1)',
-                  border: 'none', borderRadius: '20px', padding: '5px 12px', fontSize: '0.7rem', color: 'white', fontWeight: 600
-                }}
-              >
-                {experienceMode === 'expert' ? 'EXPERT' : 'SIMPLE'}
-              </button>
             </div>
           )}
 
@@ -1309,140 +1183,101 @@ A visual task planner and focus timer inspired by Tiimo.
 
             {/* Desktop View */}
             <div className="hide-on-mobile" style={{ width: '100%', height: '100%', display: 'flex' }}>
-              {/* Build Side Panel (Simple Mode) */}
-              {experienceMode === 'simple' && (
-                <div style={{
-                  width: '380px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  background: 'rgba(10, 14, 39, 0.7)',
-                  borderRight: '1px solid rgba(102, 126, 234, 0.2)',
-                  backdropFilter: 'blur(40px)',
-                  padding: '30px',
-                  gap: '24px'
-                }}>
-                  <div style={{ marginBottom: '20px' }}>
-                    <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 800, marginBottom: '10px' }}>AI Builder</h3>
-                    <p style={{ color: '#b8c5d6', lineHeight: 1.5 }}>Tell AI what you want to change, and watch the app rebuild in real-time.</p>
-                  </div>
-
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <textarea
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="e.g. 'Add a dark mode', 'Change the font to Inter', 'Make a task list with priorities'..."
-                      style={{
-                        flex: 1,
-                        padding: '20px',
-                        background: 'rgba(10, 14, 39, 0.4)',
-                        border: '1px solid rgba(102, 126, 234, 0.2)',
-                        borderRadius: '20px',
-                        color: 'white',
-                        fontSize: '1rem',
-                        resize: 'none',
-                        outline: 'none',
-                        transition: 'all 0.3s'
-                      }}
-                    />
-                    <button
-                      onClick={handleGenerate}
-                      disabled={loading}
-                      style={{
-                        padding: '20px',
-                        background: loading ? 'rgba(79, 172, 254, 0.3)' : 'var(--gradient-primary)',
-                        border: 'none',
-                        borderRadius: '20px',
-                        color: 'white',
-                        fontWeight: 700,
-                        fontSize: '1.2rem',
-                        cursor: 'pointer',
-                        boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)'
-                      }}
-                    >
-                      {loading ? '⚡ Rebuilding...' : '✨ Generate Changes'}
-                    </button>
-                    {status && (
-                      <div style={{
-                        padding: '12px',
-                        background: 'rgba(79, 172, 254, 0.1)',
-                        border: '1px solid rgba(79, 172, 254, 0.2)',
-                        borderRadius: '12px',
-                        fontSize: '0.9rem',
-                        color: '#4facfe'
-                      }}>
-                        {status}
-                      </div>
-                    )}
-                  </div>
+              {/* Build Side Panel */}
+              <div style={{
+                width: '380px',
+                display: 'flex',
+                flexDirection: 'column',
+                background: 'rgba(10, 14, 39, 0.7)',
+                borderRight: '1px solid rgba(102, 126, 234, 0.2)',
+                backdropFilter: 'blur(40px)',
+                padding: '30px',
+                gap: '24px'
+              }}>
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 800, marginBottom: '10px' }}>AI Builder</h3>
+                  <p style={{ color: '#b8c5d6', lineHeight: 1.5 }}>Tell AI what you want to change, and watch the app rebuild in real-time.</p>
                 </div>
-              )}
 
-              {/* IDE View (Expert Mode) */}
-              {experienceMode === 'expert' && (viewMode === 'split' || viewMode === 'editor') && (
-                <div style={{ flex: 1, display: 'flex', borderRight: viewMode === 'split' ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
-                  <FileExplorer
-                    files={files}
-                    selectedFile={activeFile}
-                    onFileSelect={setActiveFile}
-                    onFileCreate={handleFileCreate}
-                    onFileDelete={handleFileDelete}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="e.g. 'Add a dark mode', 'Change the font to Inter', 'Make a task list with priorities'..."
+                    style={{
+                      flex: 1,
+                      padding: '20px',
+                      background: 'rgba(10, 14, 39, 0.4)',
+                      border: '1px solid rgba(102, 126, 234, 0.2)',
+                      borderRadius: '20px',
+                      color: 'white',
+                      fontSize: '1rem',
+                      resize: 'none',
+                      outline: 'none',
+                      transition: 'all 0.3s'
+                    }}
                   />
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ padding: '16px', background: 'rgba(20,27,45,0.6)', borderBottom: '1px solid rgba(102, 126, 234, 0.2)' }}>
-                      <textarea
-                        value={prompt}
-                        onChange={e => setPrompt(e.target.value)}
-                        placeholder="Expert prompt..."
-                        style={{ width: '100%', height: '50px', background: 'rgba(0,0,0,0.3)', color: 'white', borderRadius: '8px', padding: '10px' }}
-                      />
-                      <button onClick={handleGenerate} style={{ marginTop: '10px', padding: '8px 20px', background: '#667eea', color: 'white', borderRadius: '6px' }}>Generate</button>
+                  <button
+                    onClick={handleGenerate}
+                    disabled={loading}
+                    style={{
+                      padding: '20px',
+                      background: loading ? 'rgba(79, 172, 254, 0.3)' : 'var(--gradient-primary)',
+                      border: 'none',
+                      borderRadius: '20px',
+                      color: 'white',
+                      fontWeight: 700,
+                      fontSize: '1.2rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)'
+                    }}
+                  >
+                    {loading ? '⚡ Rebuilding...' : '✨ Generate Changes'}
+                  </button>
+                  {status && (
+                    <div style={{
+                      padding: '12px',
+                      background: 'rgba(79, 172, 254, 0.1)',
+                      border: '1px solid rgba(79, 172, 254, 0.2)',
+                      borderRadius: '12px',
+                      fontSize: '0.9rem',
+                      color: '#4facfe'
+                    }}>
+                      {status}
                     </div>
-                    <textarea
-                      value={files[activeFile] || ''}
-                      onChange={(e) => handleFileChange(e.target.value)}
-                      style={{
-                        flex: 1, width: '100%', fontFamily: 'monospace', fontSize: '0.9rem', padding: '16px', background: '#0d1117', color: '#e6edf3', border: 'none', resize: 'none'
-                      }}
-                    />
-                  </div>
+                  )}
                 </div>
-              )}
-
+              </div>
 
               {/* Preview Panel  */}
-              {(experienceMode === 'simple' || (experienceMode === 'expert' && (viewMode === 'split' || viewMode === 'preview'))) && (
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                background: '#f5f7fb',
+                position: 'relative'
+              }}>
                 <div style={{
                   flex: 1,
+                  overflow: 'auto',
+                  padding: '40px',
                   display: 'flex',
-                  flexDirection: 'column',
-                  background: experienceMode === 'simple' ? '#f5f7fb' : 'linear-gradient(135deg, #0a0e27 0%, #141b2d 100%)',
-                  position: 'relative'
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}>
-                  {experienceMode === 'expert' && viewMode === 'split' && (
-                    <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#b8c5d6' }}>▶️ LIVE PREVIEW</div>
-                  )}
                   <div style={{
-                    flex: 1,
-                    overflow: 'auto',
-                    padding: experienceMode === 'simple' ? '40px' : (viewMode === 'split' ? '20px' : '0'),
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center'
+                    width: '100%',
+                    maxWidth: '1200px',
+                    height: '100%',
+                    background: 'white',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+                    borderRadius: '20px',
+                    overflow: 'hidden'
                   }}>
-                    <div style={{
-                      width: '100%',
-                      maxWidth: experienceMode === 'simple' ? '1200px' : 'none',
-                      height: '100%',
-                      background: 'white',
-                      boxShadow: experienceMode === 'simple' ? '0 20px 60px rgba(0,0,0,0.1)' : 'none',
-                      borderRadius: experienceMode === 'simple' ? '20px' : '0',
-                      overflow: 'hidden'
-                    }}>
-                      <RuntimeApp />
-                    </div>
+                    <RuntimeApp />
                   </div>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Mobile View Content */}
@@ -1451,8 +1286,7 @@ A visual task planner and focus timer inspired by Tiimo.
             </div>
           </div>
         </>
-      )
-      }
+      )}
 
       {/* Global Mobile Navigation (Visible in both views) */}
       <div className="show-on-mobile mobile-nav-bar">
@@ -1464,30 +1298,12 @@ A visual task planner and focus timer inspired by Tiimo.
           <span>Apps</span>
         </button>
         <button
-          className={`mobile-nav-item ${view === 'editor' && mobileTab === 'build' ? 'active' : ''}`}
-          onClick={() => { setView('editor'); setMobileTab('build'); }}
+          className={`mobile-nav-item ${view === 'editor' ? 'active' : ''}`}
+          onClick={() => { setView('editor'); }}
         >
           <span style={{ fontSize: '1.4rem' }}>✨</span>
           <span>Build</span>
         </button>
-        {experienceMode === 'expert' && (
-          <>
-            <button
-              className={`mobile-nav-item ${view === 'editor' && mobileTab === 'files' ? 'active' : ''}`}
-              onClick={() => { setView('editor'); setMobileTab('files'); }}
-            >
-              <span style={{ fontSize: '1.4rem' }}>📁</span>
-              <span>Files</span>
-            </button>
-            <button
-              className={`mobile-nav-item ${view === 'editor' && mobileTab === 'code' ? 'active' : ''}`}
-              onClick={() => { setView('editor'); setMobileTab('code'); }}
-            >
-              <span style={{ fontSize: '1.4rem' }}>📝</span>
-              <span>Code</span>
-            </button>
-          </>
-        )}
       </div>
 
       <style>{`
