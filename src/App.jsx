@@ -869,7 +869,7 @@ A visual task planner and focus timer inspired by Tiimo.
 
       // Use System Instructions for better reliability
       const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         systemInstruction: `You are an expert React developer. 
         You modify a Virtual File System (VFS) based on user requests.
         ALWAYS return a valid JSON object.
