@@ -876,6 +876,7 @@ A visual task planner and focus timer inspired by Tiimo.
   const [isAiInputVisible, setIsAiInputVisible] = useState(false);
   const [referenceApp, setReferenceApp] = useState({ url: '', description: '' });
   const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
+  const [thinkingLevel, setThinkingLevel] = useState('medium');
 
   // Save to localStorage
   useEffect(() => {
@@ -937,7 +938,13 @@ A visual task planner and focus timer inspired by Tiimo.
   const handleGenerate = async () => {
     if (!prompt) return;
     setLoading(true);
-    setStatus('AI is thinking...');
+    const statusMessages = {
+      minimal: 'AI is using minimal thought...',
+      low: 'AI is thinking briefly...',
+      medium: 'AI is thinking deeply...',
+      high: 'AI is using maximum thought...'
+    };
+    setStatus(statusMessages[thinkingLevel] || 'AI is thinking...');
 
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -968,10 +975,17 @@ A visual task planner and focus timer inspired by Tiimo.
         }`,
       });
 
+      const THINKING_CONFIGS = {
+        minimal: { thinking_level: 'MINIMAL', temperature: 0.1, topP: 0.8, topK: 10 },
+        low: { thinking_level: 'LOW', temperature: 0.3, topP: 0.9, topK: 25 },
+        medium: { thinking_level: 'MEDIUM', temperature: 0.6, topP: 0.95, topK: 45 },
+        high: { thinking_level: 'HIGH', temperature: 0.9, topP: 0.99, topK: 80 }
+      };
+
+      const config = THINKING_CONFIGS[thinkingLevel] || THINKING_CONFIGS.medium;
+
       const generationConfig = {
-        temperature: 0.1,
-        topP: 0.95,
-        topK: 40,
+        ...config,
         maxOutputTokens: 8192,
         responseMimeType: "application/json",
       };
@@ -1157,6 +1171,32 @@ A visual task planner and focus timer inspired by Tiimo.
 
         {isAiInputVisible && (
           <div className="mobile-chat-container">
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', overflowX: 'auto', paddingBottom: '4px', pointerEvents: 'auto' }}>
+              {[
+                { id: 'minimal', icon: '�' },
+                { id: 'low', icon: '🌘' },
+                { id: 'medium', icon: '🌗' },
+                { id: 'high', icon: '�' }
+              ].map(level => (
+                <button
+                  key={level.id}
+                  onClick={() => setThinkingLevel(level.id)}
+                  style={{
+                    padding: '6px 10px',
+                    background: thinkingLevel === level.id ? 'var(--gradient-primary)' : 'rgba(20, 27, 45, 0.8)',
+                    border: '1px solid rgba(102, 126, 234, 0.3)',
+                    borderRadius: '20px',
+                    color: thinkingLevel === level.id ? 'white' : '#b8c5d6',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    backdropFilter: 'blur(10px)',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {level.icon} {level.id.charAt(0).toUpperCase() + level.id.slice(1)}
+                </button>
+              ))}
+            </div>
             <div className="mobile-chat-inner">
               <input
                 value={prompt}
@@ -1402,6 +1442,51 @@ A visual task planner and focus timer inspired by Tiimo.
                         ✕
                       </button>
                     )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#b8c5d6', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Thinking Level</span>
+                      <span style={{ color: '#4facfe', fontSize: '0.8rem', fontWeight: 700 }}>{thinkingLevel.toUpperCase()}</span>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      background: 'rgba(255,255,255,0.03)',
+                      borderRadius: '12px',
+                      padding: '4px',
+                      border: '1px solid rgba(102, 126, 234, 0.1)'
+                    }}>
+                      {[
+                        { id: 'minimal', label: 'Min', icon: '�' },
+                        { id: 'low', label: 'Low', icon: '🌘' },
+                        { id: 'medium', label: 'Med', icon: '🌗' },
+                        { id: 'high', label: 'High', icon: '�' }
+                      ].map(level => (
+                        <button
+                          key={level.id}
+                          onClick={() => setThinkingLevel(level.id)}
+                          style={{
+                            flex: 1,
+                            padding: '8px 4px',
+                            background: thinkingLevel === level.id ? 'var(--gradient-primary)' : 'transparent',
+                            border: 'none',
+                            borderRadius: '8px',
+                            color: thinkingLevel === level.id ? 'white' : '#b8c5d6',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <span style={{ fontSize: '0.9rem' }}>{level.icon}</span>
+                          {level.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <button
                     onClick={handleGenerate}
