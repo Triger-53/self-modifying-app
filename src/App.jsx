@@ -1201,10 +1201,9 @@ A visual task planner and focus timer inspired by Tiimo.
             <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', overflowX: 'auto', paddingBottom: '4px', pointerEvents: 'auto' }}>
               {[
                 { id: 'minimal', icon: '⚡' },
-                { id: 'standard', icon: '🧠' },
-                { id: 'advanced', icon: '🧬' },
-                { id: 'pro', icon: '🌌' },
-                { id: 'ultra', icon: '🔮' }
+                { id: 'low', icon: '🧠' },
+                { id: 'medium', icon: '🧬' },
+                { id: 'high', icon: '�' }
               ].map(level => (
                 <button
                   key={level.id}
@@ -1485,9 +1484,9 @@ A visual task planner and focus timer inspired by Tiimo.
                       border: '1px solid rgba(102, 126, 234, 0.1)'
                     }}>
                       {[
-                        { id: 'minimal', label: 'Min', icon: '�' },
-                        { id: 'low', label: 'Low', icon: '🌘' },
-                        { id: 'medium', label: 'Med', icon: '🌗' },
+                        { id: 'minimal', label: 'Min', icon: '⚡' },
+                        { id: 'low', label: 'Low', icon: '🧠' },
+                        { id: 'medium', label: 'Med', icon: '🧬' },
                         { id: 'high', label: 'High', icon: '�' }
                       ].map(level => (
                         <button
