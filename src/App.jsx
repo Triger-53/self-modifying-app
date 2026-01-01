@@ -798,6 +798,7 @@ A visual task planner and focus timer inspired by Tiimo.
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
   const [bundledCode, setBundledCode] = useState('');
+  const [isAiInputVisible, setIsAiInputVisible] = useState(false);
 
   // Save to localStorage
   useEffect(() => {
@@ -1043,22 +1044,51 @@ A visual task planner and focus timer inspired by Tiimo.
           </div>
         </div>
 
-        <div className="mobile-chat-container">
-          <div className="mobile-chat-inner">
-            <input
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe changes..."
-              style={{ flex: 1, padding: '14px 18px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '25px', color: 'white', fontSize: '1rem', outline: 'none' }}
-            />
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="mobile-chat-send"
-            >{loading ? '⚡' : '🚀'}</button>
+        {/* Floating AI Toggle Button */}
+        <button
+          onClick={() => setIsAiInputVisible(!isAiInputVisible)}
+          className="mobile-ai-toggle"
+          style={{
+            position: 'absolute',
+            bottom: isAiInputVisible ? '140px' : '85px',
+            right: '20px',
+            width: '50px',
+            height: '50px',
+            borderRadius: '25px',
+            background: isAiInputVisible ? 'rgba(255,255,255,0.1)' : 'var(--gradient-primary)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+            color: 'white',
+            fontSize: '1.2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          {isAiInputVisible ? '❌' : '✨'}
+        </button>
+
+        {isAiInputVisible && (
+          <div className="mobile-chat-container">
+            <div className="mobile-chat-inner">
+              <input
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Describe changes..."
+                style={{ flex: 1, padding: '14px 18px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '25px', color: 'white', fontSize: '1rem', outline: 'none' }}
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                className="mobile-chat-send"
+              >{loading ? '⚡' : '🚀'}</button>
+            </div>
+            {status && <div className="mobile-status-pill">{status}</div>}
           </div>
-          {status && <div className="mobile-status-pill">{status}</div>}
-        </div>
+        )}
       </div>
     );
   };
