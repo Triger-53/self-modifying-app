@@ -416,6 +416,80 @@ const TaskItem = ({ task, onStartTask, isActive, taskColor }) => {
   );
 };
 
+const ReferenceAppModal = ({ isOpen, onClose, referenceData, onSave }) => {
+  const [url, setUrl] = useState(referenceData.url || '');
+  const [description, setDescription] = useState(referenceData.description || '');
+
+  useEffect(() => {
+    if (isOpen) {
+      setUrl(referenceData.url || '');
+      setDescription(referenceData.description || '');
+    }
+  }, [isOpen, referenceData]);
+
+  const handleSave = () => {
+    onSave({ url, description });
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 2000 }}>
+      <div className="modal-content" style={{ background: '#1a1f35', color: 'white', border: '1px solid rgba(102, 126, 234, 0.3)', maxWidth: '500px' }}>
+        <h2 style={{ color: 'white', marginBottom: '10px' }}>Reference App</h2>
+        <p style={{ color: '#b8c5d6', fontSize: '0.9rem', marginBottom: '20px' }}>
+          Provide details about an existing app you'd like the AI to use as a reference.
+        </p>
+        
+        <div className="form-group" style={{ marginBottom: '15px' }}>
+          <label style={{ color: '#b8c5d6', display: 'block', marginBottom: '8px', fontWeight: 600 }}>App URL (optional)</label>
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://example.com"
+            style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+          />
+        </div>
+
+        <div className="form-group">
+          <label style={{ color: '#b8c5d6', display: 'block', marginBottom: '8px', fontWeight: 600 }}>Description / Features to Copy</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe the styling, components, or functionality you want to reference..."
+            style={{ 
+              width: '100%', 
+              minHeight: '120px', 
+              padding: '12px', 
+              background: 'rgba(255,255,255,0.05)', 
+              border: '1px solid rgba(255,255,255,0.1)', 
+              borderRadius: '8px', 
+              color: 'white',
+              resize: 'vertical',
+              fontFamily: 'inherit'
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            style={{ padding: '10px 20px', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', color: '#b8c5d6', cursor: 'pointer', fontWeight: 600 }}
+          >Cancel</button>
+          <button 
+            type="button" 
+            onClick={handleSave} 
+            style={{ padding: '10px 20px', background: 'var(--gradient-primary)', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', fontWeight: 600 }}
+          >Save Reference</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AddTaskModal = ({ isOpen, onClose, onSaveTask }) => {
   const [title, setTitle] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -799,6 +873,8 @@ A visual task planner and focus timer inspired by Tiimo.
   const [status, setStatus] = useState('');
   const [bundledCode, setBundledCode] = useState('');
   const [isAiInputVisible, setIsAiInputVisible] = useState(false);
+  const [referenceApp, setReferenceApp] = useState({ url: '', description: '' });
+  const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
 
   // Save to localStorage
   useEffect(() => {
@@ -900,7 +976,14 @@ A visual task planner and focus timer inspired by Tiimo.
       };
 
       const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: `VFS: ${JSON.stringify(files)}\n\nUSER REQUEST: ${prompt}` }] }],
+        contents: [{
+          role: "user",
+          parts: [{
+            text: `VFS: ${JSON.stringify(files)}\n\n` +
+              (referenceApp.url || referenceApp.description ? `REFERENCE APP INFO:\nURL: ${referenceApp.url}\nDescription: ${referenceApp.description}\n\n` : '') +
+              `USER REQUEST: ${prompt}`
+          }]
+        }],
         generationConfig
       });
 
@@ -1080,6 +1163,22 @@ A visual task planner and focus timer inspired by Tiimo.
                 placeholder="Describe changes..."
                 style={{ flex: 1, padding: '14px 18px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '25px', color: 'white', fontSize: '1rem', outline: 'none' }}
               />
+              <button
+                onClick={() => setIsReferenceModalOpen(true)}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  background: (referenceApp.url || referenceApp.description) ? 'rgba(79, 172, 254, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(102, 126, 234, 0.3)',
+                  color: (referenceApp.url || referenceApp.description) ? '#4facfe' : '#b8c5d6',
+                  fontSize: '1.2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+              >🔗</button>
               <button
                 onClick={handleGenerate}
                 disabled={loading}
@@ -1262,6 +1361,46 @@ A visual task planner and focus timer inspired by Tiimo.
                       transition: 'all 0.3s'
                     }}
                   />
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      onClick={() => setIsReferenceModalOpen(true)}
+                      style={{
+                        padding: '10px 15px',
+                        background: (referenceApp.url || referenceApp.description) ? 'rgba(79, 172, 254, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(102, 126, 234, 0.3)',
+                        borderRadius: '12px',
+                        color: (referenceApp.url || referenceApp.description) ? '#4facfe' : '#b8c5d6',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        transition: 'all 0.2s',
+                        fontWeight: 600
+                      }}
+                    >
+                      <span>🔗</span>
+                      {(referenceApp.url || referenceApp.description) ? 'Reference Added' : 'Add Reference App'}
+                    </button>
+                    {(referenceApp.url || referenceApp.description) && (
+                      <button
+                        onClick={() => setReferenceApp({ url: '', description: '' })}
+                        style={{
+                          padding: '10px',
+                          background: 'rgba(255, 77, 77, 0.1)',
+                          border: '1px solid rgba(255, 77, 77, 0.2)',
+                          borderRadius: '12px',
+                          color: '#ff4d4d',
+                          fontSize: '0.85rem',
+                          cursor: 'pointer'
+                        }}
+                        title="Clear Reference"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                   <button
                     onClick={handleGenerate}
                     disabled={loading}
@@ -1352,6 +1491,13 @@ A visual task planner and focus timer inspired by Tiimo.
           <span>Build</span>
         </button>
       </div>
+
+      <ReferenceAppModal
+        isOpen={isReferenceModalOpen}
+        onClose={() => setIsReferenceModalOpen(false)}
+        referenceData={referenceApp}
+        onSave={setReferenceApp}
+      />
 
       <style>{`
         .mobile-editor-header {
