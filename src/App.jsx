@@ -867,7 +867,7 @@ A visual task planner and focus timer inspired by Tiimo.
 
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash", // Revert to a stable model
+        model: "gemini-2.5-flash", // Use a stable flash model
         generationConfig: {
           maxOutputTokens: 8192,
           temperature: 0.1, // Ensure maximum stability
