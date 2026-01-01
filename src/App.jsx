@@ -875,6 +875,12 @@ A visual task planner and focus timer inspired by Tiimo.
         ALWAYS return a valid JSON object.
         ONLY include files that were modified or created.
         
+        DESIGN PHILOSOPHY:
+        - All apps must be "Fit to Screen". 
+        - DO NOT allow scrolling. Everything must be visible at once.
+        - Use flexbox and '100%' or '100vh' heights strategically.
+        - Prefer responsive designs that fill the container width and height.
+        
         OUTPUT SCHEMA:
         {
           "files": {
@@ -1029,9 +1035,9 @@ A visual task planner and focus timer inspired by Tiimo.
           <div className="runtime-preview-container" style={{
             background: 'white',
             borderRadius: '20px',
-            minHeight: '100%',
+            height: '100%',
             boxShadow: '0 10px 40px rgba(0,0,0,0.05)',
-            overflow: 'auto'
+            overflow: 'hidden'
           }}>
             <RuntimeApp />
           </div>
@@ -1281,7 +1287,7 @@ A visual task planner and focus timer inspired by Tiimo.
                     background: 'white',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
                     borderRadius: '20px',
-                    overflow: 'auto',
+                    overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column'
                   }}>
@@ -1380,10 +1386,10 @@ A visual task planner and focus timer inspired by Tiimo.
           to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Virtual App Scoping & Alignment Fixes */
+         /* Virtual App Scoping & Alignment Fixes */
         .runtime-preview {
           width: 100%;
-          min-height: 100%;
+          height: 100%;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -1391,19 +1397,16 @@ A visual task planner and focus timer inspired by Tiimo.
           transform-origin: top center;
         }
 
+        .runtime-preview > * {
+          max-height: 100%;
+          box-sizing: border-box;
+        }
+
         .runtime-preview-container {
           position: relative;
-          scrollbar-width: thin;
-          scrollbar-color: rgba(0,0,0,0.2) transparent;
-        }
-
-        .runtime-preview-container::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .runtime-preview-container::-webkit-scrollbar-thumb {
-          background: rgba(0,0,0,0.1);
-          border-radius: 10px;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
         }
       `}</style>
     </div>
