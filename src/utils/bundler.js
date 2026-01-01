@@ -225,9 +225,11 @@ export const bundle = async (files) => {
 
     // Create the bundle string
     // We use JSON.stringify to safely serialize the code strings, avoiding all escaping issues.
+    // We also use a cache for modules to ensure they are only executed once.
     const bundleCode = `
     const modulesSource = ${JSON.stringify(modulesMap)};
     const modules = {};
+    const cache = {};
     
     // Compile functions
     for (const [name, code] of Object.entries(modulesSource)) {
@@ -254,8 +256,12 @@ export const bundle = async (files) => {
       );
       
       if (!key) throw new Error(\`Cannot find module '\${moduleName}'\`);
+
+      // 3. Module Caching
+      if (cache[key]) return cache[key].exports;
       
       const module = { exports: {} };
+      cache[key] = module;
       modules[key](module, module.exports, require);
       return module.exports;
     };
